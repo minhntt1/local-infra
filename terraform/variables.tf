@@ -59,7 +59,7 @@ variable "vms" {
       disk_gb = 50
     }
     dev = {
-      cores   = 1
+      cores   = 2
       memory  = 4096
       disk_gb = 25
     }
