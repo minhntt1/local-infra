@@ -5,7 +5,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   vm_id     = each.key == "prod" ? 200 : 201
   name      = each.key
   started   = true
-  on_boot    = var.vm_defaults.onboot
+  on_boot = var.vm_defaults.onboot
   tags      = [each.key, "terraform"]
 
   clone {
