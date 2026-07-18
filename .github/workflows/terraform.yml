@@ -1,16 +1,41 @@
-name: Terraform Provision
+name: Terraform
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
   push:
     branches:
       - main
     paths:
       - 'terraform/**'
-  workflow_dispatch:
 
 jobs:
-  terraform:
-    name: Terraform Apply
+  terraform-fmt:
+    name: Terraform Format
+    runs-on: [self-hosted, infra, ci]
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.3
+          terraform_wrapper: false
+
+      - name: Terraform Fmt
+        run: terraform fmt -check
+
+  terraform-plan:
+    name: Terraform Plan
     runs-on: [self-hosted, infra, ci]
 
     env:
@@ -42,8 +67,50 @@ jobs:
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
 
+      - name: Terraform Validate
+        run: terraform validate
+        env:
+          TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
+          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
+          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+
       - name: Terraform Plan
         run: terraform plan -out=tfplan
+        env:
+          TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
+          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
+          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: [self-hosted, infra, ci]
+    needs: terraform-plan
+    if: github.event_name == 'push'
+
+    env:
+      TF_IN_AUTOMATION: "true"
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.3
+          terraform_wrapper: false
+
+      - name: Resolve Proxmox API URL
+        run: |
+          PROXMOX_IP=$(ip route show default | awk '{print $3}')
+          echo "PM_API_URL=https://${PROXMOX_IP}:8006/api2/json" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        run: terraform init
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
