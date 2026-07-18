@@ -9,4 +9,5 @@ output "vm_info" {
       mac     = vm.mac_addresses
     }
   }
+
 }
