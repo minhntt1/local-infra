@@ -1,0 +1,56 @@
+name: Terraform Provision
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: [self-hosted, infra, ci]
+
+    env:
+      TF_IN_AUTOMATION: "true"
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.3
+
+      - name: Resolve Proxmox API URL
+        run: |
+          PROXMOX_IP=$(ip route show default | awk '{print $3}')
+          echo "PM_API_URL=https://${PROXMOX_IP}:8006/api2/json" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        run: terraform init
+        env:
+          TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
+          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
+          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
+          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
+          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
+          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
+          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
