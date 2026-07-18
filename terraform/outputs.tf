@@ -11,3 +11,4 @@ output "vm_info" {
   }
 
 }
+
