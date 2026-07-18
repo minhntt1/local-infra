@@ -32,7 +32,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Fmt
-        run: terraform fmt -check
+        run: terraform fmt -check -recursive -diff
 
   terraform-plan:
     name: Terraform Plan
