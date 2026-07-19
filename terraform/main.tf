@@ -5,6 +5,11 @@ resource "proxmox_virtual_environment_vm" "vm" {
   vm_id     = each.key == "prod" ? 200 : 201
   name      = each.key
   started   = true
+  # reboot_after_update defaults to true in the bpg/proxmox provider. This means
+  # an in-place update (e.g. state reconciliation after an import, or a config
+  # change that requires it) will shut down and restart the VM to apply. This is
+  # expected behavior — no destroy occurs. Left at the default intentionally so
+  # that real config changes (CPU/memory/etc.) take effect on the running VM.
   on_boot   = var.vm_defaults.onboot
   tags      = [each.key, "terraform"]
 
