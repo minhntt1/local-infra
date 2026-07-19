@@ -7,6 +7,11 @@ pm_api_token_secret = "<your-token-secret>"
 # template_name = "debian13-cloudinit-template"
 # target_node   = "hp"
 
+# create_vms controls the clone block:
+#   false (default) -> manage existing/imported VMs in place (no clone, no replace)
+#   true            -> provision fresh VMs by cloning the template (clone block applied)
+# create_vms = false
+
 # vm_defaults = {
 #   ciuser     = "admin"
 #   cipassword = "changeme"
