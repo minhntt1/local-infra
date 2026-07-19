@@ -13,9 +13,27 @@ on:
     paths:
       - 'terraform/**'
 
-# Force JavaScript actions (actions/checkout, etc.) to run on the runner's
-# bundled Node 24 runtime instead of Node 20. See GitHub community discussion
-# https://github.com/orgs/community/discussions/190988
+# ---------------------------------------------------------------------------
+# Node Runtime & FORCE_JAVASCRIPT_ACTIONS_TO_NODE24
+#
+# The Debian nodejs / nodejs-doc / node-corepack packages were removed from the
+# container. The only Node available to the runner is its bundled toolchain
+# under /home/infra/actions-runner/externals/ (e.g. node24 -> v24.16.0, which
+# also ships npm/npx/corepack).
+#
+# To make JavaScript actions (e.g. actions/checkout) execute on the runner's
+# bundled Node 24 instead of Node 20, the workflow sets (per GitHub community
+# discussion https://github.com/orgs/community/discussions/190988):
+#
+#   env:
+#     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+#
+# Note: the var forces Node 24 execution but does NOT silence the runner's
+# Node-20 deprecation warnings (known runner bug actions/runner#4295). All
+# actions are kept on their latest major (actions/checkout@v4,
+# actions/upload-artifact@v4, actions/download-artifact@v4,
+# hashicorp/setup-terraform@v4).
+# ---------------------------------------------------------------------------
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
