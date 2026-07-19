@@ -13,6 +13,12 @@ on:
     paths:
       - 'terraform/**'
 
+# Force JavaScript actions (actions/checkout, etc.) to run on the runner's
+# bundled Node 24 runtime instead of Node 20. See GitHub community discussion
+# https://github.com/orgs/community/discussions/190988
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   terraform-fmt:
     name: Terraform Format
@@ -27,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.11.3
           terraform_wrapper: false
@@ -53,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.11.3
           terraform_wrapper: false
@@ -107,7 +113,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.11.3
           terraform_wrapper: false
