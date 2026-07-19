@@ -19,3 +19,12 @@ pm_api_token_secret = "<your-token-secret>"
 #   onboot     = true
 #   bridge     = "vnet1"
 # }
+
+# vm_power_state controls the desired power state per VM (keyed by VM name).
+# Valid values: "started" (power on + auto-start on host boot) or
+# "stopped" (power off + do not auto-start on host reboot).
+# To turn off the dev VM while preserving its disk/network/config, set:
+# vm_power_state = {
+#   prod = "started"
+#   dev  = "stopped"
+# }
