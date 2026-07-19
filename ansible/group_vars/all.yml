@@ -1,0 +1,33 @@
+# Shared variables for the entire lab k3s cluster.
+#
+# Secrets (k3s_token) must NOT be committed. Override at runtime with
+# --extra-vars "k3s_token=..." or an Ansible vault file. A placeholder is
+# provided only so the playbook is syntactically valid; the real token should
+# be a random 32+ char string, e.g. `openssl rand -hex 32`.
+
+# --- k3s release ---
+k3s_version: "v1.30.4+k3s1"
+
+# --- cluster join token (OVERRIDE, do not commit a real value) ---
+k3s_token: "CHANGE_ME_TO_A_RANDOM_TOKEN"
+
+# --- networking ---
+# Interface k3s binds/advertises on. The prod VM gets a DHCP address on the
+# Proxmox bridge `vnet1` (10.10.0.0/24). The server/agent roles resolve the
+# IP from this interface at runtime.
+cluster_interface: "vnet1"
+
+# --- CNI / flannel ---
+# Default k3s CNI is flannel. Set to "calico"/"cilium" to switch if desired.
+k3s_cni: "flannel"
+
+# --- optional bundled components ---
+# k3s ships traefik as the default ingress. Set false to disable.
+k3s_disable_traefik: false
+# Other k3s defaults kept on: servicelb, local-storage, metrics-server.
+
+# --- install / maintenance toggles ---
+# Run `apt update` + upgrade during the common role.
+k3s_apt_upgrade: false
+# Where to drop the fetched admin kubeconfig on the controller running Ansible.
+k3s_local_kubeconfig_path: "./kubeconfig-prod.yaml"

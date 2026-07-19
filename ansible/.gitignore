@@ -1,0 +1,9 @@
+# Fetched kubeconfig from the prod k3s server
+kubeconfig-*.yaml
+
+# Local collections/roles installed via ansible-galaxy
+collections/
+roles/requirements.lock
+
+# Python venv sometimes used for ansible
+.venv/

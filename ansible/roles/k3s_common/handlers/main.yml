@@ -1,0 +1,7 @@
+---
+# Handlers for the k3s_common role.
+# (Reserved for reboot-after-kernel-change scenarios; currently unused but
+# kept so roles can notify "Reboot if required" without playbook changes.)
+- name: Reboot if required
+  ansible.builtin.reboot:
+    msg: "Rebooting to apply kernel/module changes for k3s"

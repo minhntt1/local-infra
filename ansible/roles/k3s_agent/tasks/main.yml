@@ -1,0 +1,40 @@
+---
+# Join a k3s agent (worker) to the server. No-op when k3s_agents is empty.
+# Runs as root (inventory ansible_user=root). The server URL/token are taken
+# from the k3s_servers group (the prod VM) and the shared k3s_token.
+
+- name: Resolve the k3s server endpoint from the k3s_servers group
+  ansible.builtin.set_fact:
+    k3s_server_url: "https://{{ hostvars[groups['k3s_servers'][0]]['k3s_node_ip'] }}:6443"
+  delegate_to: localhost
+  delegate_facts: true
+  run_once: true
+
+- name: Fail if node IP could not be resolved on the cluster interface
+  ansible.builtin.fail:
+    msg: >-
+      Could not find IPv4 address on interface '{{ cluster_interface }}'.
+      Check the VM's network config and the cluster_interface variable.
+  when: k3s_node_ip is not defined or k3s_node_ip | length == 0
+
+- name: Build k3s agent install flags
+  ansible.builtin.set_fact:
+    k3s_agent_install_flags: >-
+      --token {{ k3s_token }}
+      --server {{ k3s_server_url }}
+      --node-ip {{ k3s_node_ip }}
+      {{ k3s_agent.extra_args }}
+
+- name: Install k3s agent via official script
+  ansible.builtin.command:
+    cmd: >-
+      curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }}
+      INSTALL_K3S_EXEC="{{ k3s_agent_install_flags }}" sh -
+  args:
+    creates: /usr/local/bin/k3s-agent
+
+- name: Ensure k3s-agent service is enabled and running
+  ansible.builtin.systemd:
+    name: k3s-agent
+    enabled: true
+    state: started
