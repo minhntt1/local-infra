@@ -10,8 +10,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
   # change that requires it) will shut down and restart the VM to apply. This is
   # expected behavior — no destroy occurs. Left at the default intentionally so
   # that real config changes (CPU/memory/etc.) take effect on the running VM.
-  on_boot   = var.vm_defaults.onboot
-  tags      = [each.key, "terraform"]
+  on_boot = var.vm_defaults.onboot
+  tags    = [each.key, "terraform"]
 
   # The clone block is only relevant when Terraform CREATES a new VM from the
   # template. For VMs that already exist (e.g. imported via imports.tf), the
