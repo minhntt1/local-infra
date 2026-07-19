@@ -8,9 +8,17 @@ resource "proxmox_virtual_environment_vm" "vm" {
   on_boot   = var.vm_defaults.onboot
   tags      = [each.key, "terraform"]
 
-  clone {
-    vm_id = 9999
-    full  = true
+  # The clone block is only relevant when Terraform CREATES a new VM from the
+  # template. For VMs that already exist (e.g. imported via imports.tf), the
+  # clone arguments (vm_id/full) force a destroy-and-recreate, which is wrong.
+  # Gate it behind var.create_vms so it is omitted for existing VMs and only
+  # applied when provisioning fresh VMs.
+  dynamic "clone" {
+    for_each = var.create_vms ? [1] : []
+    content {
+      vm_id = 9999
+      full  = true
+    }
   }
 
   agent {

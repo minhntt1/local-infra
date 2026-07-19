@@ -65,3 +65,9 @@ variable "vms" {
     }
   }
 }
+
+variable "create_vms" {
+  description = "When true, provision fresh VMs by cloning the template (clone block applied). When false (default), manage existing/imported VMs in place and omit the clone block so Terraform does not force a destroy-and-recreate."
+  type        = bool
+  default     = false
+}
