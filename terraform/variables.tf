@@ -77,7 +77,7 @@ variable "vm_power_state" {
   type        = map(string)
   default = {
     prod = "started"
-    dev  = "started"
+    dev  = "stopped"
   }
   validation {
     condition = alltrue([
