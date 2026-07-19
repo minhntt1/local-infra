@@ -71,3 +71,18 @@ variable "create_vms" {
   type        = bool
   default     = false
 }
+
+variable "vm_power_state" {
+  description = "Desired power state per VM, keyed by VM name. Valid values: \"started\" (power on and auto-start on host boot) or \"stopped\" (power off and do not auto-start on host reboot)."
+  type        = map(string)
+  default = {
+    prod = "started"
+    dev  = "started"
+  }
+  validation {
+    condition = alltrue([
+      for s in values(var.vm_power_state) : contains(["started", "stopped"], s)
+    ])
+    error_message = "Each vm_power_state value must be either \"started\" or \"stopped\"."
+  }
+}

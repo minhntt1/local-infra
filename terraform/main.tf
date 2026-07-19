@@ -4,13 +4,17 @@ resource "proxmox_virtual_environment_vm" "vm" {
   node_name = var.target_node
   vm_id     = each.key == "prod" ? 200 : 201
   name      = each.key
-  started   = true
+  # Desired power state is driven by var.vm_power_state (keyed by VM name).
+  # "started" => power on and auto-start on host boot; "stopped" => power off
+  # and do not auto-start. Changing this only triggers a graceful shutdown or
+  # start — it never destroys the VM, so disk/network/config are preserved.
+  started = var.vm_power_state[each.key] == "started"
   # reboot_after_update defaults to true in the bpg/proxmox provider. This means
   # an in-place update (e.g. state reconciliation after an import, or a config
   # change that requires it) will shut down and restart the VM to apply. This is
   # expected behavior — no destroy occurs. Left at the default intentionally so
   # that real config changes (CPU/memory/etc.) take effect on the running VM.
-  on_boot = var.vm_defaults.onboot
+  on_boot = var.vm_power_state[each.key] == "started"
   tags    = [each.key, "terraform"]
 
   # The clone block is only relevant when Terraform CREATES a new VM from the
