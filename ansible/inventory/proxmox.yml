@@ -21,7 +21,11 @@
 
 plugin: community.proxmox.proxmox
 url: "{{ lookup('env', 'PM_API_URL') }}"
-token_id: "{{ lookup('env', 'PM_API_TOKEN_ID') }}"
+# community.proxmox splits the API token into user (before '!') and
+# token_id (after '!'). PM_API_TOKEN_ID holds the full "user!token" value,
+# so we split it here.
+user: "{{ lookup('env', 'PM_API_TOKEN_ID').split('!')[0] }}"
+token_id: "{{ lookup('env', 'PM_API_TOKEN_ID').split('!')[1] }}"
 token_secret: "{{ lookup('env', 'PM_API_TOKEN_SECRET') }}"
 validate_certs: false
 # Only manage the single Proxmox node used by Terraform (variables.tf target_node).
