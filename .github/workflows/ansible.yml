@@ -63,7 +63,9 @@ jobs:
       - name: Install Ansible & lint
         run: |
           pip install --upgrade pip
-          pip install ansible ansible-lint
+          # requests is required by the community.general.proxmox inventory
+          # plugin (used by inventory/proxmox.yml) at runtime.
+          pip install ansible ansible-lint requests
 
       - name: Install required collections
         run: ansible-galaxy collection install community.general ansible.posix
@@ -109,7 +111,9 @@ jobs:
       - name: Install Ansible
         run: |
           pip install --upgrade pip
-          pip install ansible
+          # requests is required by the community.general.proxmox inventory
+          # plugin (used by inventory/proxmox.yml) at runtime.
+          pip install ansible requests
 
       - name: Install required collections
         run: ansible-galaxy collection install community.general ansible.posix
@@ -120,7 +124,17 @@ jobs:
           echo "PM_API_URL=https://${PROXMOX_IP}:8006/api2/json" >> $GITHUB_ENV
 
       - name: Show resolved inventory
-        run: ansible-inventory -i inventory/proxmox.yml --list
+        run: |
+          ansible-inventory -i inventory/proxmox.yml --list
+          # Fail loudly if the dynamic inventory resolved no hosts, instead of
+          # silently skipping every play (which would still exit 0).
+          HOST_COUNT=$(ansible-inventory -i inventory/proxmox.yml --list \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([h for h in d.get('all',{}).get('hosts',[]) if h!='localhost']))")
+          echo "Resolved $HOST_COUNT non-localhost host(s)"
+          if [ "$HOST_COUNT" -eq 0 ]; then
+            echo "::error::Inventory resolved 0 hosts - aborting (check Proxmox API token / network)."
+            exit 1
+          fi
 
       - name: Ansible Playbook (k3s bootstrap)
         run: |
