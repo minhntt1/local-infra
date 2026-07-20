@@ -77,11 +77,13 @@ jobs:
       - name: Ansible Lint
         run: ansible-lint
 
-      - name: Cleanup apt
+      - name: Cleanup apt & SSH key
         if: always()
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
+          # Remove the ephemeral runner private key written for this run.
+          rm -f "$HOME/.ssh/runner_ansible"
 
   ansible-apply:
     name: Ansible Apply
@@ -134,6 +136,21 @@ jobs:
           PROXMOX_IP=$(ip route show default | awk '{print $3}')
           echo "PM_API_URL=https://${PROXMOX_IP}:8006" >> $GITHUB_ENV
 
+      - name: Install runner SSH key for Ansible
+        # The previous ForwardAgent model failed in CI because no SSH agent
+        # socket is available to the runner. Instead we write the runner's
+        # private key (SSH_RUNNER_ANSIBLE_PRIVATE) to a file and point Ansible
+        # at it via ANSIBLE_SSH_KEY_FILE. The matching public key
+        # (SSH_RUNNER_ANSIBLE_PUBLIC) is injected into each VM's cloud-init by
+        # Terraform, so root key-based auth succeeds. The key file is created
+        # under the runner's ~/.ssh and cleaned up at the end of the job.
+        run: |
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "${{ secrets.SSH_RUNNER_ANSIBLE_PRIVATE }}" > "$HOME/.ssh/runner_ansible"
+          chmod 600 "$HOME/.ssh/runner_ansible"
+          echo "ANSIBLE_SSH_KEY_FILE=$HOME/.ssh/runner_ansible" >> "$GITHUB_ENV"
+
       - name: Show resolved inventory
         run: |
           ansible-inventory -i inventory/proxmox.yml --list
@@ -158,8 +175,10 @@ jobs:
           PM_API_TOKEN_ID: ${{ secrets.PM_API_TOKEN_ID }}
           PM_API_TOKEN_SECRET: ${{ secrets.PM_API_TOKEN_SECRET }}
 
-      - name: Cleanup apt
+      - name: Cleanup apt & SSH key
         if: always()
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
+          # Remove the ephemeral runner private key written for this run.
+          rm -f "$HOME/.ssh/runner_ansible"
