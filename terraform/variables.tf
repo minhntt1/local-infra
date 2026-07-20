@@ -88,7 +88,7 @@ variable "vm_power_state" {
 }
 
 variable "ssh_public_keys" {
-  description = "SSH public key(s) injected into the cloud-init user account for key-based auth. Sourced from the SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret. Use newline-separated strings for multiple keys."
+  description = "SSH public key(s) injected into the cloud-init user account for key-based auth. Sourced from the SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret. A single key string; empty string means no key is injected."
   type        = string
   sensitive   = true
   default     = ""
