@@ -28,3 +28,9 @@ pm_api_token_secret = "<your-token-secret>"
 #   prod = "started"
 #   dev  = "stopped"
 # }
+
+# ssh_public_keys injects the runner's SSH public key into the cloud-init user
+# account for key-based auth (in addition to the password). In CI this is fed
+# from the SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret via TF_VAR_ssh_public_keys.
+# For local runs, paste the public key here (newline-separated for multiple):
+# ssh_public_keys = "ssh-ed25519 AAAA... runner@automation1"

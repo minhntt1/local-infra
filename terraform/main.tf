@@ -64,6 +64,11 @@ resource "proxmox_virtual_environment_vm" "vm" {
       username = var.vm_defaults.ciuser
       password = var.vm_defaults.cipassword
     }
+
+    # Inject the runner's SSH public key for key-based auth (in addition to the
+    # password). Sourced from the SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret via
+    # TF_VAR_ssh_public_keys. Empty string is a no-op (cloud-init ignores it).
+    ssh_public_keys = var.ssh_public_keys
   }
 
   lifecycle {
