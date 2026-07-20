@@ -127,9 +127,12 @@ jobs:
         run: ansible-galaxy collection install community.proxmox ansible.posix
 
       - name: Resolve Proxmox API URL
+        # community.proxmox appends '/api2/json' to the url itself, so the
+        # base URL must NOT include it (otherwise the path doubles up and the
+        # API returns 501).
         run: |
           PROXMOX_IP=$(ip route show default | awk '{print $3}')
-          echo "PM_API_URL=https://${PROXMOX_IP}:8006/api2/json" >> $GITHUB_ENV
+          echo "PM_API_URL=https://${PROXMOX_IP}:8006" >> $GITHUB_ENV
 
       - name: Show resolved inventory
         run: |
