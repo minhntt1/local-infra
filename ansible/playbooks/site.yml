@@ -1,0 +1,34 @@
+---
+# Bootstrap a k3s cluster on the lab VMs.
+#
+# Topology: single control-plane (k3s_servers) on the prod VM (VMID 200),
+# with an empty k3s_agents group for future workers (e.g. dev VM 201).
+#
+# Run:
+#   PM_API_URL=... PM_API_TOKEN_ID=... PM_API_TOKEN_SECRET=... \
+#     ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
+#     --extra-vars "k3s_token=$(openssl rand -hex 32)"
+#
+# The Proxmox dynamic inventory resolves the current DHCP IPs, so no static
+# addresses are needed. SSH is as root via the forwarded SSH agent.
+
+- name: Common k3s prerequisites (all cluster nodes)
+  hosts: k3s_servers:k3s_agents
+  gather_facts: true
+  become: false
+  roles:
+    - role: k3s_common
+
+- name: Deploy k3s server (control-plane)
+  hosts: k3s_servers
+  gather_facts: true
+  become: false
+  roles:
+    - role: k3s_server
+
+- name: Join k3s agents (workers)
+  hosts: k3s_agents
+  gather_facts: true
+  become: false
+  roles:
+    - role: k3s_agent

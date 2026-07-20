@@ -1,0 +1,5 @@
+---
+# Defaults for the k3s_agent role.
+k3s_agent_config:
+  # Extra args appended to the k3s agent invocation.
+  extra_args: ""

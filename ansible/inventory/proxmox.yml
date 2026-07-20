@@ -1,0 +1,44 @@
+# Proxmox dynamic inventory for the lab k3s cluster.
+#
+# Resolves VM IPs at runtime from the Proxmox API (same token Terraform uses),
+# so we never hardcode the DHCP-assigned addresses on bridge vnet1. The QEMU
+# guest agent must be running on the VM (it is: terraform/main.tf sets
+# agent.enabled = true) so the API can report the current IPv4 address.
+#
+# Auth: uses the same Proxmox API token as Terraform (admin@pve!terraform).
+# DO NOT commit the secret. Provide it via environment variables (see below)
+# or an Ansible vault file. The token ID/secret mirror terraform.tfvars:
+#   PM_API_TOKEN_ID=admin@pve!terraform
+#   PM_API_TOKEN_SECRET=<secret>
+#   PM_API_URL=https://<proxmox-ip>:8006/api2/json
+#
+# Run with:
+#   PM_API_URL=... PM_API_TOKEN_ID=... PM_API_TOKEN_SECRET=... \
+#     ansible-inventory -i inventory/proxmox.yml --list
+#
+# Topology: VMID 200 (prod) -> k3s_servers; VMID 201 (dev) is left out of
+# k3s_agents for now (powered off in Terraform) but is easy to enable later.
+
+plugin: community.general.proxmox
+url: "{{ lookup('env', 'PM_API_URL') }}"
+token_id: "{{ lookup('env', 'PM_API_TOKEN_ID') }}"
+token_secret: "{{ lookup('env', 'PM_API_TOKEN_SECRET') }}"
+validate_certs: false
+# Only manage the single Proxmox node used by Terraform (variables.tf target_node).
+nodes:
+  - hp
+# Group VMs by our own labels instead of Proxmox tags.
+groups:
+  k3s_servers: "'200' in (vmid | string)"
+  # Future workers: uncomment to include the dev VM (201) as an agent.
+  # k3s_agents: "'201' in (vmid | string)"
+# Compose a stable ansible_host from the guest agent's first IPv4 on vnet1.
+# The guest agent reports addresses per interface; we take the first IPv4.
+compose:
+  ansible_host: >-
+    (guest_agent_info.networks | default([])
+      | selectattr('ip-address-type', 'eq', 'ipv4')
+      | map(attribute='ip-address') | list | first)
+  cluster_node: name
+# Use root over SSH agent, matching the Terraform provider ssh config.
+ansible_user: root
