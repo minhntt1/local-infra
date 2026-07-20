@@ -19,7 +19,7 @@
 # Topology: VMID 200 (prod) -> k3s_servers; VMID 201 (dev) is left out of
 # k3s_agents for now (powered off in Terraform) but is easy to enable later.
 
-plugin: community.general.proxmox
+plugin: community.proxmox.proxmox
 url: "{{ lookup('env', 'PM_API_URL') }}"
 token_id: "{{ lookup('env', 'PM_API_TOKEN_ID') }}"
 token_secret: "{{ lookup('env', 'PM_API_TOKEN_SECRET') }}"

@@ -63,12 +63,16 @@ jobs:
       - name: Install Ansible & lint
         run: |
           pip install --upgrade pip
-          # requests is required by the community.general.proxmox inventory
+          # requests is required by the community.proxmox inventory
           # plugin (used by inventory/proxmox.yml) at runtime.
           pip install ansible ansible-lint requests
 
       - name: Install required collections
-        run: ansible-galaxy collection install community.general ansible.posix
+        # community.proxmox hosts the proxmox dynamic inventory plugin
+        # (community.general.proxmox was deprecated and moved there in
+        # community.general 15.0.0). ansible.posix provides the mount/sysctl
+        # modules used by the k3s roles.
+        run: ansible-galaxy collection install community.proxmox ansible.posix
 
       - name: Ansible Lint
         run: ansible-lint
@@ -111,12 +115,16 @@ jobs:
       - name: Install Ansible
         run: |
           pip install --upgrade pip
-          # requests is required by the community.general.proxmox inventory
+          # requests is required by the community.proxmox inventory
           # plugin (used by inventory/proxmox.yml) at runtime.
           pip install ansible requests
 
       - name: Install required collections
-        run: ansible-galaxy collection install community.general ansible.posix
+        # community.proxmox hosts the proxmox dynamic inventory plugin
+        # (community.general.proxmox was deprecated and moved there in
+        # community.general 15.0.0). ansible.posix provides the mount/sysctl
+        # modules used by the k3s roles.
+        run: ansible-galaxy collection install community.proxmox ansible.posix
 
       - name: Resolve Proxmox API URL
         run: |
