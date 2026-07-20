@@ -173,6 +173,14 @@ jobs:
             exit 1
           fi
 
+      - name: Debug resolved host vars for prod
+        # Print the connection vars Ansible actually computes for the prod host
+        # (ansible_user, ansible_host, ansible_ssh_private_key_file,
+        # ansible_ssh_common_args) so we can confirm the runner key is wired up
+        # correctly. Redact nothing sensitive here — these are local paths only.
+        run: |
+          ansible-inventory -i inventory/proxmox.yml --host prod
+
       - name: Ansible Playbook (k3s bootstrap)
         run: |
           ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
