@@ -39,26 +39,13 @@ groups:
   # k3s_agents: "proxmox_vmid | string == '201'"
 # Compose a stable ansible_host from the guest agent's first IPv4 on vnet1.
 # The guest agent reports addresses per interface; we take the first IPv4.
-# Also compose the SSH connection vars here (Jinja IS evaluated in compose,
-# unlike ansible.cfg) so the runner's key file and per-run known_hosts are
-# applied per host.
+# (SSH connection vars such as ansible_user / ansible_ssh_private_key_file /
+# ansible_ssh_common_args live in group_vars/all.yml instead — the
+# community.proxmox inventory plugin ignores compose keys that are not
+# host attributes, so they never reached the host.)
 compose:
   ansible_host: >-
     (guest_agent_info.networks | default([])
       | selectattr('ip-address-type', 'eq', 'ipv4')
       | map(attribute='ip-address') | list | first)
   cluster_node: name
-  # Connect as the Terraform cloud-init user (var.vm_defaults.ciuser, default
-  # "admin"). Terraform injects the runner's SSH public key into THIS account's
-  # authorized_keys, not into root, so we log in as this user and escalate with
-  # become (configured in ansible.cfg). The private key path comes from
-  # ANSIBLE_SSH_KEY_FILE, set in the workflow from the SSH_RUNNER_ANSIBLE_PRIVATE
-  # secret. This replaces the old ForwardAgent model, which had no agent socket
-  # available in CI.
-  ansible_user: admin
-  ansible_ssh_private_key_file: "{{ lookup('env', 'ANSIBLE_SSH_KEY_FILE') | default('~/.ssh/id_ed25519', true) }}"
-  # Per-run known_hosts (ANSIBLE_SSH_KNOWN_HOSTS) with accept-new avoids the
-  # "REMOTE HOST IDENTIFICATION HAS CHANGED" failure when a VM is recreated.
-  ansible_ssh_common_args: >-
-    -o StrictHostKeyChecking=accept-new
-    -o UserKnownHostsFile={{ lookup('env', 'ANSIBLE_SSH_KNOWN_HOSTS') | default('~/.ssh/known_hosts', true) }}
