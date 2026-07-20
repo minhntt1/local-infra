@@ -23,7 +23,7 @@
       --token {{ k3s_token }}
       --server {{ k3s_agent_server_url }}
       --node-ip {{ k3s_common_node_ip }}
-      {{ k3s_agent.extra_args }}
+      {{ k3s_agent_config.extra_args }}
 
 - name: Install k3s agent via official script
   ansible.builtin.command:

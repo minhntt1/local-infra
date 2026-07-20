@@ -6,4 +6,4 @@ skip_list:
   # The k3s install uses the official `curl -sfL https://get.k3s.io | sh`
   # method, which is the documented, canonical install path and cannot be
   # expressed with the get_url/uri modules.
-  - command-instead-of-get_url
+  - command-instead-of-module
