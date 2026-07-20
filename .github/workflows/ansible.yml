@@ -49,24 +49,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python tooling
-        # The self-hosted runner (Debian LXC) ships python3 (3.13) but no pip.
-        # Install pip via apt and use the system interpreter directly instead
-        # of actions/setup-python (which has no cached interpreter here).
+      - name: Setup Python venv
+        # The self-hosted runner (Debian LXC) ships python3 but no pip/venv.
+        # Install python3 + pip + venv via apt, then create (if missing) and
+        # activate a dedicated venv so pip installs never touch the system.
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip
-          python3 -m pip install --upgrade pip
+          sudo apt-get install -y python3 python3-pip python3-venv
+          python3 -m venv ~/.infra_venv
+          echo "$HOME/.infra_venv/bin" >> $GITHUB_PATH
 
       - name: Install Ansible & lint
         run: |
-          python3 -m pip install ansible ansible-lint
+          pip install --upgrade pip
+          pip install ansible ansible-lint
 
       - name: Install required collections
         run: ansible-galaxy collection install community.general ansible.posix
 
       - name: Ansible Lint
         run: ansible-lint
+
+      - name: Cleanup apt
+        if: always()
+        run: |
+          sudo apt-get clean
+          sudo apt-get autoremove -y
 
   ansible-apply:
     name: Ansible Apply
@@ -86,18 +94,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Python tooling
-        # The self-hosted runner (Debian LXC) ships python3 (3.13) but no pip.
-        # Install pip via apt and use the system interpreter directly instead
-        # of actions/setup-python (which has no cached interpreter here).
+      - name: Setup Python venv
+        # The self-hosted runner (Debian LXC) ships python3 but no pip/venv.
+        # Install python3 + pip + venv via apt, then create (if missing) and
+        # activate a dedicated venv so pip installs never touch the system.
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip
-          python3 -m pip install --upgrade pip
+          sudo apt-get install -y python3 python3-pip python3-venv
+          python3 -m venv ~/.infra_venv
+          echo "$HOME/.infra_venv/bin" >> $GITHUB_PATH
 
       - name: Install Ansible
         run: |
-          python3 -m pip install ansible
+          pip install --upgrade pip
+          pip install ansible
 
       - name: Install required collections
         run: ansible-galaxy collection install community.general ansible.posix
@@ -118,3 +128,9 @@ jobs:
           PM_API_URL: ${{ env.PM_API_URL }}
           PM_API_TOKEN_ID: ${{ secrets.PM_API_TOKEN_ID }}
           PM_API_TOKEN_SECRET: ${{ secrets.PM_API_TOKEN_SECRET }}
+
+      - name: Cleanup apt
+        if: always()
+        run: |
+          sudo apt-get clean
+          sudo apt-get autoremove -y
