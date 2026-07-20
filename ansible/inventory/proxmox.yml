@@ -32,10 +32,11 @@ validate_certs: false
 nodes:
   - hp
 # Group VMs by our own labels instead of Proxmox tags.
+# community.proxmox exposes the VMID as 'proxmox_vmid' (not 'vmid').
 groups:
-  k3s_servers: "'200' in (vmid | string)"
+  k3s_servers: "proxmox_vmid | string == '200'"
   # Future workers: uncomment to include the dev VM (201) as an agent.
-  # k3s_agents: "'201' in (vmid | string)"
+  # k3s_agents: "proxmox_vmid | string == '201'"
 # Compose a stable ansible_host from the guest agent's first IPv4 on vnet1.
 # The guest agent reports addresses per interface; we take the first IPv4.
 compose:
