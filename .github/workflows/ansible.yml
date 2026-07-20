@@ -181,6 +181,13 @@ jobs:
         run: |
           ansible-inventory -i inventory/proxmox.yml --host prod
 
+      - name: Debug SSH connection to prod (ping -vvvv)
+        # Verbose ad-hoc ping to surface the exact SSH command Ansible builds
+        # (key file, user, host, ProxyCommand/ssh_args) and the real auth
+        # failure reason. -vvvv prints the ssh invocation and debug output.
+        run: |
+          ansible -i inventory/proxmox.yml prod -m ping -vvvv
+
       - name: Ansible Playbook (k3s bootstrap)
         run: |
           ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
