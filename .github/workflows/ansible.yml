@@ -139,8 +139,10 @@ jobs:
           ansible-inventory -i inventory/proxmox.yml --list
           # Fail loudly if the dynamic inventory resolved no hosts, instead of
           # silently skipping every play (which would still exit 0).
+          # community.proxmox lists hosts under _meta.hostvars (not directly
+          # under all.hosts), so count from there and exclude implicit localhost.
           HOST_COUNT=$(ansible-inventory -i inventory/proxmox.yml --list \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([h for h in d.get('all',{}).get('hosts',[]) if h!='localhost']))")
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([h for h in d.get('_meta',{}).get('hostvars',{}) if h!='localhost']))")
           echo "Resolved $HOST_COUNT non-localhost host(s)"
           if [ "$HOST_COUNT" -eq 0 ]; then
             echo "::error::Inventory resolved 0 hosts - aborting (check Proxmox API token / network)."
