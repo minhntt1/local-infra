@@ -74,6 +74,6 @@
 
 - name: Determine node IP on the cluster interface
   ansible.builtin.set_fact:
-    k3s_node_ip: >-
+    k3s_common_node_ip: >-
       {{ ansible_facts[cluster_interface]['ipv4']['address'] }}
   when: cluster_interface in ansible_facts

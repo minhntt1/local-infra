@@ -1,6 +1,6 @@
 ---
 # Defaults for the k3s_server role.
-k3s_server:
+k3s_server_config:
   # Extra args appended to the k3s server invocation.
   extra_args: ""
   # Flannel backend (vxlan is the flannel default).

@@ -5,7 +5,7 @@
 
 - name: Resolve the k3s server endpoint from the k3s_servers group
   ansible.builtin.set_fact:
-    k3s_server_url: "https://{{ hostvars[groups['k3s_servers'][0]]['k3s_node_ip'] }}:6443"
+    k3s_agent_server_url: "https://{{ hostvars[groups['k3s_servers'][0]]['k3s_common_node_ip'] }}:6443"
   delegate_to: localhost
   delegate_facts: true
   run_once: true
@@ -15,14 +15,14 @@
     msg: >-
       Could not find IPv4 address on interface '{{ cluster_interface }}'.
       Check the VM's network config and the cluster_interface variable.
-  when: k3s_node_ip is not defined or k3s_node_ip | length == 0
+  when: k3s_common_node_ip is not defined or k3s_common_node_ip | length == 0
 
 - name: Build k3s agent install flags
   ansible.builtin.set_fact:
     k3s_agent_install_flags: >-
       --token {{ k3s_token }}
-      --server {{ k3s_server_url }}
-      --node-ip {{ k3s_node_ip }}
+      --server {{ k3s_agent_server_url }}
+      --node-ip {{ k3s_common_node_ip }}
       {{ k3s_agent.extra_args }}
 
 - name: Install k3s agent via official script
