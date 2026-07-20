@@ -160,12 +160,12 @@ jobs:
 
       - name: Show resolved inventory
         run: |
-          ansible-inventory -i inventory/proxmox.yml --list
+          ansible-inventory -i inventory --list
           # Fail loudly if the dynamic inventory resolved no hosts, instead of
           # silently skipping every play (which would still exit 0).
           # community.proxmox lists hosts under _meta.hostvars (not directly
           # under all.hosts), so count from there and exclude implicit localhost.
-          HOST_COUNT=$(ansible-inventory -i inventory/proxmox.yml --list \
+          HOST_COUNT=$(ansible-inventory -i inventory --list \
             | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([h for h in d.get('_meta',{}).get('hostvars',{}) if h!='localhost']))")
           echo "Resolved $HOST_COUNT non-localhost host(s)"
           if [ "$HOST_COUNT" -eq 0 ]; then
@@ -179,18 +179,18 @@ jobs:
         # ansible_ssh_common_args) so we can confirm the runner key is wired up
         # correctly. Redact nothing sensitive here — these are local paths only.
         run: |
-          ansible-inventory -i inventory/proxmox.yml --host prod
+          ansible-inventory -i inventory --host prod
 
       - name: Debug SSH connection to prod (ping -vvvv)
         # Verbose ad-hoc ping to surface the exact SSH command Ansible builds
         # (key file, user, host, ProxyCommand/ssh_args) and the real auth
         # failure reason. -vvvv prints the ssh invocation and debug output.
         run: |
-          ansible -i inventory/proxmox.yml prod -m ping -vvvv
+          ansible -i inventory prod -m ping -vvvv
 
       - name: Ansible Playbook (k3s bootstrap)
         run: |
-          ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
+          ansible-playbook -i inventory playbooks/site.yml \
             --extra-vars "k3s_token=${{ secrets.K3S_TOKEN }}"
         env:
           PM_API_URL: ${{ env.PM_API_URL }}

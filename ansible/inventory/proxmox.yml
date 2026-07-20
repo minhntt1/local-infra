@@ -14,7 +14,12 @@
 #
 # Run with:
 #   PM_API_URL=... PM_API_TOKEN_ID=... PM_API_TOKEN_SECRET=... \
-#     ansible-inventory -i inventory/proxmox.yml --list
+#     ansible-inventory -i inventory --list
+#
+# NOTE: this file lives inside the `inventory/` directory alongside
+# inventory/group_vars/all.yml. Ansible only auto-loads group_vars/host_vars
+# when the inventory source is a DIRECTORY, so always point -i at `inventory`
+# (the directory), never at this single file.
 #
 # Topology: VMID 200 (prod) -> k3s_servers; VMID 201 (dev) is left out of
 # k3s_agents for now (powered off in Terraform) but is easy to enable later.

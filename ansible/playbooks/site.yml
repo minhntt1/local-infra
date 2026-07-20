@@ -6,7 +6,7 @@
 #
 # Run:
 #   PM_API_URL=... PM_API_TOKEN_ID=... PM_API_TOKEN_SECRET=... \
-#     ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
+#     ansible-playbook -i inventory playbooks/site.yml \
 #     --extra-vars "k3s_token=$(openssl rand -hex 32)"
 #
 # The Proxmox dynamic inventory resolves the current DHCP IPs, so no static
