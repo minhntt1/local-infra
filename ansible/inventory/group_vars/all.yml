@@ -12,10 +12,14 @@ k3s_version: "v1.30.4+k3s1"
 k3s_token: "CHANGE_ME_TO_A_RANDOM_TOKEN"
 
 # --- networking ---
-# Interface k3s binds/advertises on. The prod VM gets a DHCP address on the
-# Proxmox bridge `vnet1` (10.10.0.0/24). The server/agent roles resolve the
-# IP from this interface at runtime.
-cluster_interface: "vnet1"
+# Guest NIC k3s binds/advertises on. The Terraform network_device block sets
+# no `model`, so the bpg/proxmox provider defaults to `virtio`; the guest sees
+# the first virtio NIC as `ens18` (systemd predictable name). The prod VM gets
+# its DHCP address on this interface (which is bridged onto the Proxmox
+# `vnet1` bridge, 10.10.0.0/24). The k3s_common role resolves the node IP from
+# this interface when present in facts, and falls back to ansible_default_ipv4
+# (the default-route interface) otherwise.
+cluster_interface: "ens18"
 
 # --- CNI / flannel ---
 # Default k3s CNI is flannel. Set to "calico"/"cilium" to switch if desired.
