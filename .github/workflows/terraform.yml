@@ -67,6 +67,7 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
       TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+      TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
 
     defaults:
       run:
@@ -96,6 +97,7 @@ jobs:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
@@ -103,6 +105,7 @@ jobs:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -121,6 +124,7 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
       TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+      TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
 
     defaults:
       run:
@@ -153,6 +157,7 @@ jobs:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
@@ -160,3 +165,4 @@ jobs:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}

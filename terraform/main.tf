@@ -63,6 +63,13 @@ resource "proxmox_virtual_environment_vm" "vm" {
     user_account {
       username = var.vm_defaults.ciuser
       password = var.vm_defaults.cipassword
+      # Inject the runner's SSH public key for key-based auth (in addition to
+      # the password). The bpg/proxmox provider exposes this as `keys` (a
+      # list(string)) under user_account. The ssh_public_keys variable is a
+      # single string (the SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret); convert it
+      # to a one-element list, or an empty list when unset so cloud-init ignores
+      # it and password-only behavior is preserved.
+      keys = var.ssh_public_keys == "" ? [] : [var.ssh_public_keys]
     }
   }
 
