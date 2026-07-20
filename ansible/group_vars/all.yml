@@ -27,7 +27,8 @@ k3s_disable_traefik: false
 # Other k3s defaults kept on: servicelb, local-storage, metrics-server.
 
 # --- install / maintenance toggles ---
-# Run `apt update` + upgrade during the common role.
-k3s_apt_upgrade: false
+# Run `apt update` + upgrade before installing k3s (recommended so the node
+# gets the latest kernel/modules/security patches). Set false to skip.
+k3s_apt_upgrade: true
 # Where to drop the fetched admin kubeconfig on the controller running Ansible.
 k3s_local_kubeconfig_path: "./kubeconfig-prod.yaml"

@@ -41,6 +41,27 @@
     - { key: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
     - { key: "net.ipv4.ip_forward", value: "1" }
 
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade all packages before installing k3s
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+  when: k3s_apt_upgrade | bool
+
+- name: Remove unused packages after upgrade
+  ansible.builtin.apt:
+    autoremove: true
+  when: k3s_apt_upgrade | bool
+
+- name: Clean apt cache after upgrade
+  ansible.builtin.apt:
+    clean: true
+  when: k3s_apt_upgrade | bool
+
 - name: Install prerequisite packages
   ansible.builtin.apt:
     name:
@@ -50,13 +71,6 @@
       - gnupg
       - lsb-release
     state: present
-    update_cache: true
-
-- name: Optionally upgrade all packages
-  ansible.builtin.apt:
-    upgrade: dist
-    update_cache: true
-  when: k3s_apt_upgrade | bool
 
 - name: Determine node IP on the cluster interface
   ansible.builtin.set_fact:
