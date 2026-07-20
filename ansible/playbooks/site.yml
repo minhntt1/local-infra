@@ -10,25 +10,27 @@
 #     --extra-vars "k3s_token=$(openssl rand -hex 32)"
 #
 # The Proxmox dynamic inventory resolves the current DHCP IPs, so no static
-# addresses are needed. SSH is as root via the forwarded SSH agent.
+# addresses are needed. SSH connects as the Terraform cloud-init user
+# (var.vm_defaults.ciuser, default "admin") with the runner's SSH key, then
+# escalates to root via become (sudo). See ansible.cfg.
 
 - name: Common k3s prerequisites (all cluster nodes)
   hosts: k3s_servers:k3s_agents
   gather_facts: true
-  become: false
+  become: true
   roles:
     - role: k3s_common
 
 - name: Deploy k3s server (control-plane)
   hosts: k3s_servers
   gather_facts: true
-  become: false
+  become: true
   roles:
     - role: k3s_server
 
 - name: Join k3s agents (workers)
   hosts: k3s_agents
   gather_facts: true
-  become: false
+  become: true
   roles:
     - role: k3s_agent

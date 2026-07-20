@@ -82,8 +82,9 @@ jobs:
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
-          # Remove the ephemeral runner private key written for this run.
-          rm -f "$HOME/.ssh/runner_ansible"
+          # Remove the ephemeral runner private key and per-run known_hosts
+          # written for this run.
+          rm -f "$HOME/.ssh/runner_ansible" "$HOME/.ssh/runner_known_hosts"
 
   ansible-apply:
     name: Ansible Apply
@@ -141,15 +142,21 @@ jobs:
         # socket is available to the runner. Instead we write the runner's
         # private key (SSH_RUNNER_ANSIBLE_PRIVATE) to a file and point Ansible
         # at it via ANSIBLE_SSH_KEY_FILE. The matching public key
-        # (SSH_RUNNER_ANSIBLE_PUBLIC) is injected into each VM's cloud-init by
-        # Terraform, so root key-based auth succeeds. The key file is created
-        # under the runner's ~/.ssh and cleaned up at the end of the job.
+        # (SSH_RUNNER_ANSIBLE_PUBLIC) is injected into the Terraform cloud-init
+        # user's authorized_keys (var.vm_defaults.ciuser, default "admin"), so
+        # Ansible logs in as that user and escalates with become. We also use a
+        # fresh per-run known_hosts (ANSIBLE_SSH_KNOWN_HOSTS) with
+        # StrictHostKeyChecking=accept-new so a recreated VM with a new host key
+        # does not trip "REMOTE HOST IDENTIFICATION HAS CHANGED". Both files are
+        # cleaned up at the end of the job.
         run: |
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "${{ secrets.SSH_RUNNER_ANSIBLE_PRIVATE }}" > "$HOME/.ssh/runner_ansible"
           chmod 600 "$HOME/.ssh/runner_ansible"
+          : > "$HOME/.ssh/runner_known_hosts"
           echo "ANSIBLE_SSH_KEY_FILE=$HOME/.ssh/runner_ansible" >> "$GITHUB_ENV"
+          echo "ANSIBLE_SSH_KNOWN_HOSTS=$HOME/.ssh/runner_known_hosts" >> "$GITHUB_ENV"
 
       - name: Show resolved inventory
         run: |
@@ -180,5 +187,6 @@ jobs:
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
-          # Remove the ephemeral runner private key written for this run.
-          rm -f "$HOME/.ssh/runner_ansible"
+          # Remove the ephemeral runner private key and per-run known_hosts
+          # written for this run.
+          rm -f "$HOME/.ssh/runner_ansible" "$HOME/.ssh/runner_known_hosts"

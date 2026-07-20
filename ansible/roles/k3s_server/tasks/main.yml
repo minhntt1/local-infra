@@ -1,7 +1,8 @@
 ---
 # Install and configure a single k3s server (control-plane) on the prod VM.
-# Runs as root (inventory ansible_user=root). Idempotent: re-running only
-# restarts the service if the version/args changed.
+# Runs escalated to root via become (the play connects as the Terraform
+# cloud-init user). Idempotent: re-running only restarts the service if the
+# version/args changed.
 
 - name: Fail if node IP could not be resolved on the cluster interface
   ansible.builtin.fail:
