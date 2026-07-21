@@ -12,11 +12,14 @@ k3s_version: "v1.30.4+k3s1"
 k3s_token: "CHANGE_ME_TO_A_RANDOM_TOKEN"
 
 # --- networking ---
-# Guest NIC k3s binds/advertises on. The prod VM gets its DHCP address on this
-# interface (which is bridged onto the Proxmox `vnet1` bridge, 10.10.0.0/24).
-# The k3s_common role resolves the node IP from this interface when present in
-# facts, and falls back to ansible_default_ipv4 (the default-route interface)
-# otherwise.
+# Guest NIC for node IP resolution. Since this is a single-node cluster, k3s
+# is installed without --node-ip / --advertise-address (binds to 0.0.0.0).
+# The resolved IP from this interface is only used to rewrite the fetched
+# kubeconfig so the runner can reach the cluster via kubectl.
+# The prod VM gets its DHCP address on this interface (bridged onto the
+# Proxmox `vnet1` bridge, 10.10.0.0/24).
+# The k3s_common role resolves the node IP from this interface when present
+# in facts, and falls back to ansible_default_ipv4 otherwise.
 cluster_interface: "eth0"
 
 # --- CNI / flannel ---

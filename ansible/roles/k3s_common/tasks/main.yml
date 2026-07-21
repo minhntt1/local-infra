@@ -72,11 +72,11 @@
       - lsb-release
     state: present
 
-# Resolve the node IP k3s will bind/advertise on. `cluster_interface` is the
-# Proxmox *bridge* name (e.g. vnet1), which is NOT the guest NIC name inside
-# the VM (that is something like ens18). So we first try the named interface,
-# but fall back to ansible_default_ipv4 (the default-route interface, which is
-# the vnet1 address in this single-NIC lab) so the fact is always defined.
+# Resolve the node IP for the kubeconfig rewrite. `cluster_interface`
+# (default "eth0") is the guest NIC name inside the VM, not the Proxmox
+# bridge. We first try the named interface from Ansible facts, falling
+# back to ansible_default_ipv4 (the default-route interface) so the fact
+# is always defined for the single-NIC lab layout.
 - name: Determine node IP on the cluster interface
   ansible.builtin.set_fact:
     k3s_common_node_ip: >-
