@@ -63,10 +63,13 @@
     dest: "{{ k3s_local_kubeconfig_path }}"
     flat: true
 
-- name: Rewrite kubeconfig server address to the node IP
+- name: Rewrite kubeconfig server address to the node hostname
+  # Use the hostname instead of IP because Proxmox SDN resolves VM names to
+  # their current DHCP IPs. This makes the kubeconfig immune to IP changes —
+  # no playbook re-run needed when the DHCP lease changes.
   ansible.builtin.replace:
     path: "{{ k3s_local_kubeconfig_path }}"
     regexp: 'https://127\.0\.0\.1:6443'
-    replace: 'https://{{ k3s_common_node_ip }}:6443'
+    replace: 'https://{{ inventory_hostname }}:6443'
   delegate_to: localhost
   become: false
