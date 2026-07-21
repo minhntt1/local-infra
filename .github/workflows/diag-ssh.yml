@@ -27,3 +27,4 @@ jobs:
           echo "--- searching for agent sockets ---"
           find /home/infra -maxdepth 4 -name '*.sock' 2>/dev/null || true
           find /tmp -maxdepth 3 -name '*agent*' 2>/dev/null || true
+
