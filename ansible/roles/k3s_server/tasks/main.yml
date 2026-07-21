@@ -15,8 +15,6 @@
   ansible.builtin.set_fact:
     k3s_server_install_flags: >-
       --token {{ k3s_token }}
-      --node-ip {{ k3s_common_node_ip }}
-      --advertise-address {{ k3s_common_node_ip }}
       --flannel-backend {{ k3s_server_config.flannel_backend }}
       --cluster-cidr 10.42.0.0/16
       --service-cidr 10.43.0.0/16
