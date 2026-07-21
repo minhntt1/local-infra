@@ -8,7 +8,7 @@
 - name: Check if Helm is installed
   ansible.builtin.stat:
     path: /usr/local/bin/helm
-  register: helm_bin
+  register: k3s_tools_helm_bin
 
 - name: Install Helm
   ansible.builtin.shell: |
@@ -16,15 +16,15 @@
     curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
   args:
     executable: /bin/bash
-  when: not helm_bin.stat.exists
+  when: not k3s_tools_helm_bin.stat.exists
 
 - name: Verify Helm
   ansible.builtin.command: helm version --short
-  register: helm_version
+  register: k3s_tools_helm_version
   changed_when: false
 
 - debug:
-    var: helm_version.stdout
+    var: k3s_tools_helm_version.stdout
 
 # -----------------------------------------------------------------------------
 # Install ArgoCD
@@ -40,9 +40,9 @@
       - https://argoproj.github.io/argo-helm
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  register: repo_add
+  register: k3s_tools_repo_add
   failed_when: false
-  changed_when: "'already exists' not in (repo_add.stderr | default(''))"
+  changed_when: "'already exists' not in (k3s_tools_repo_add.stderr | default(''))"
 
 - name: Update Helm repositories
   ansible.builtin.command:
@@ -71,7 +71,7 @@
       - 10m
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  register: helm_install
+  register: k3s_tools_helm_install
 
 - name: Wait for ArgoCD server rollout
   ansible.builtin.command:
@@ -95,8 +95,8 @@
       - -A
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-  register: releases
+  register: k3s_tools_releases
   changed_when: false
 
 - debug:
-    var: releases.stdout
+    var: k3s_tools_releases.stdout
