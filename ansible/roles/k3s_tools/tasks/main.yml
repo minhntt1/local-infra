@@ -15,7 +15,7 @@
   args:
     executable: /bin/bash
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml 
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   when: not k3s_tools_helm_bin.stat.exists
   register: k3s_tools_helm_install
   changed_when: not k3s_tools_helm_bin.stat.exists
@@ -27,7 +27,7 @@
       - version
       - --short
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml 
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: k3s_tools_helm_version
   changed_when: false
 
@@ -46,7 +46,7 @@
       - argo
       - https://argoproj.github.io/argo-helm
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml 
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: k3s_tools_repo_add
   failed_when: false
   changed_when: "'already exists' not in k3s_tools_repo_add.stderr"
