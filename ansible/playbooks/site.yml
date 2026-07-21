@@ -31,7 +31,7 @@
 - name: Join k3s agents (workers)
   hosts: k3s_agents
   gather_facts: true
-  become: true
   when: groups['k3s_agents'] | length > 0
+  become: true
   roles:
     - role: k3s_agent
