@@ -28,6 +28,13 @@
   roles:
     - role: k3s_server
 
+- name: Install Helm CLI and ArgoCD on the control-plane
+  hosts: k3s_servers
+  gather_facts: true
+  become: true
+  roles:
+    - role: k3s_tools
+
 - name: Join k3s agents (workers)
   hosts: k3s_agents
   gather_facts: true

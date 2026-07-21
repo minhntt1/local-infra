@@ -1,0 +1,96 @@
+---
+# Install Helm CLI and ArgoCD on the k3s server node.
+# Runs after k3s is installed and the cluster is ready.
+# Fully idempotent: each step skips if already present, so
+# re-running the playbook does not overwrite or replace anything.
+
+# ----- Helm CLI -----
+
+- name: Check if Helm is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: k3s_tools_helm_binary
+
+- name: Install Helm CLI via official script
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    executable: /bin/bash
+  when: not k3s_tools_helm_binary.stat.exists
+  register: k3s_tools_helm_install_result
+  changed_when: k3s_tools_helm_install_result.rc == 0
+
+- name: Verify Helm installation
+  ansible.builtin.command: helm version --short
+  register: k3s_tools_helm_version
+  changed_when: false
+
+- name: Display Helm version
+  ansible.builtin.debug:
+    msg: "Helm installed: {{ k3s_tools_helm_version.stdout }}"
+
+# ----- ArgoCD (via Helm) -----
+
+- name: Check if argocd namespace already exists
+  ansible.builtin.shell:
+    cmd: |
+      kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get namespace argocd --no-headers -o name 2>/dev/null || true
+    executable: /bin/bash
+  register: k3s_tools_argocd_ns_check
+  changed_when: false
+
+- name: Set fact for argocd already installed
+  ansible.builtin.set_fact:
+    k3s_tools_argocd_already_installed: "{{ k3s_tools_argocd_ns_check.stdout != '' }}"
+
+- name: Add ArgoCD Helm repository
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      helm repo add argo https://argoproj.github.io/argo-helm
+    executable: /bin/bash
+  when: not k3s_tools_argocd_already_installed
+  register: k3s_tools_helm_repo_result
+  changed_when: "'already exists' not in k3s_tools_helm_repo_result.stderr"
+
+- name: Update Helm repositories
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      helm repo update
+    executable: /bin/bash
+  when: not k3s_tools_argocd_already_installed
+  register: k3s_tools_helm_repo_update
+  changed_when: k3s_tools_helm_repo_update.rc == 0
+
+- name: Install ArgoCD via Helm
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      helm upgrade --install argocd argo/argo-cd \
+        --namespace argocd \
+        --create-namespace
+    executable: /bin/bash
+  register: k3s_tools_argocd_install
+  changed_when: "'installed' in k3s_tools_argocd_install.stdout or 'upgraded' in k3s_tools_argocd_install.stdout"
+  # helm upgrade --install is idempotent, but we skip entirely if ArgoCD
+  # was already present to avoid the network fetch + API call on every run.
+  when: not k3s_tools_argocd_already_installed
+
+- name: Wait for ArgoCD pods to be ready
+  ansible.builtin.shell:
+    cmd: |
+      kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml wait \
+        --namespace argocd \
+        --for=condition=Ready pods \
+        --all \
+        --timeout=300s
+    executable: /bin/bash
+  register: k3s_tools_argocd_ready
+  changed_when: false
+  failed_when: k3s_tools_argocd_ready.rc != 0
+  retries: 3
+  delay: 10
+  until: k3s_tools_argocd_ready.rc == 0
+  when: not k3s_tools_argocd_already_installed
