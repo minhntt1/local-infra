@@ -15,7 +15,7 @@
 # escalates to root via become (sudo). See ansible.cfg.
 
 - name: Common k3s prerequisites (all cluster nodes)
-  hosts: k3s_servers:k3s_agents
+  hosts: k3s_servers,k3s_agents
   gather_facts: true
   become: true
   roles:
@@ -31,7 +31,6 @@
 - name: Join k3s agents (workers)
   hosts: k3s_agents
   gather_facts: true
-  when: groups['k3s_agents'] | length > 0
   become: true
   roles:
     - role: k3s_agent
