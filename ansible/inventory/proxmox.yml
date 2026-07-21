@@ -14,31 +14,43 @@
 #
 # Run with:
 #   PM_API_URL=... PM_API_TOKEN_ID=... PM_API_TOKEN_SECRET=... \
-#     ansible-inventory -i inventory/proxmox.yml --list
+#     ansible-inventory -i inventory --list
+#
+# NOTE: this file lives inside the `inventory/` directory alongside
+# inventory/group_vars/all.yml. Ansible only auto-loads group_vars/host_vars
+# when the inventory source is a DIRECTORY, so always point -i at `inventory`
+# (the directory), never at this single file.
 #
 # Topology: VMID 200 (prod) -> k3s_servers; VMID 201 (dev) is left out of
 # k3s_agents for now (powered off in Terraform) but is easy to enable later.
 
-plugin: community.general.proxmox
+plugin: community.proxmox.proxmox
 url: "{{ lookup('env', 'PM_API_URL') }}"
-token_id: "{{ lookup('env', 'PM_API_TOKEN_ID') }}"
+# community.proxmox splits the API token into user (before '!') and
+# token_id (after '!'). PM_API_TOKEN_ID holds the full "user!token" value,
+# so we split it here.
+user: "{{ lookup('env', 'PM_API_TOKEN_ID').split('!')[0] }}"
+token_id: "{{ lookup('env', 'PM_API_TOKEN_ID').split('!')[1] }}"
 token_secret: "{{ lookup('env', 'PM_API_TOKEN_SECRET') }}"
 validate_certs: false
 # Only manage the single Proxmox node used by Terraform (variables.tf target_node).
 nodes:
   - hp
 # Group VMs by our own labels instead of Proxmox tags.
+# community.proxmox exposes the VMID as 'proxmox_vmid' (not 'vmid').
 groups:
-  k3s_servers: "'200' in (vmid | string)"
+  k3s_servers: "proxmox_vmid | string == '200'"
   # Future workers: uncomment to include the dev VM (201) as an agent.
-  # k3s_agents: "'201' in (vmid | string)"
+  # k3s_agents: "proxmox_vmid | string == '201'"
 # Compose a stable ansible_host from the guest agent's first IPv4 on vnet1.
 # The guest agent reports addresses per interface; we take the first IPv4.
+# (SSH connection vars such as ansible_user / ansible_ssh_private_key_file /
+# ansible_ssh_common_args live in group_vars/all.yml instead — the
+# community.proxmox inventory plugin ignores compose keys that are not
+# host attributes, so they never reached the host.)
 compose:
   ansible_host: >-
     (guest_agent_info.networks | default([])
       | selectattr('ip-address-type', 'eq', 'ipv4')
       | map(attribute='ip-address') | list | first)
   cluster_node: name
-# Use root over SSH agent, matching the Terraform provider ssh config.
-ansible_user: root

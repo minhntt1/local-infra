@@ -1,7 +1,8 @@
 ---
 # Install and configure a single k3s server (control-plane) on the prod VM.
-# Runs as root (inventory ansible_user=root). Idempotent: re-running only
-# restarts the service if the version/args changed.
+# Runs escalated to root via become (the play connects as the Terraform
+# cloud-init user). Idempotent: re-running only restarts the service if the
+# version/args changed.
 
 - name: Fail if node IP could not be resolved on the cluster interface
   ansible.builtin.fail:
@@ -14,8 +15,6 @@
   ansible.builtin.set_fact:
     k3s_server_install_flags: >-
       --token {{ k3s_token }}
-      --node-ip {{ k3s_common_node_ip }}
-      --advertise-address {{ k3s_common_node_ip }}
       --flannel-backend {{ k3s_server_config.flannel_backend }}
       --cluster-cidr 10.42.0.0/16
       --service-cidr 10.43.0.0/16
@@ -23,12 +22,13 @@
       {{ k3s_server_config.extra_args }}
 
 - name: Install k3s server via official script
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >-
-      curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }}
+      set -o pipefail && curl -sfL https://get.k3s.io
+      | INSTALL_K3S_VERSION={{ k3s_version }}
       INSTALL_K3S_EXEC="{{ k3s_server_install_flags }}" sh -
-  args:
     creates: /usr/local/bin/k3s
+    executable: /bin/bash
 
 - name: Ensure k3s service is enabled and running
   ansible.builtin.systemd:
@@ -44,16 +44,32 @@
   delay: 10
   changed_when: false
 
+- name: Remove control-plane taint for single-node scheduling
+  # By default k3s applies node-role.kubernetes.io/control-plane:NoSchedule
+  # to the server node. In a single-node cluster with no agents, this would
+  # prevent any pod from being scheduled. Removing the taint allows user
+  # workloads to run on the control-plane node.
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl taint nodes --all
+      node-role.kubernetes.io/control-plane:NoSchedule-
+  register: k3s_server_taint_result
+  changed_when: "'not found' not in k3s_server_taint_result.stderr"
+  failed_when: k3s_server_taint_result.rc != 0 and "not found" not in k3s_server_taint_result.stderr
+
 - name: Fetch admin kubeconfig to the Ansible controller
   ansible.builtin.fetch:
     src: /etc/rancher/k3s/k3s.yaml
     dest: "{{ k3s_local_kubeconfig_path }}"
     flat: true
 
-- name: Rewrite kubeconfig server address to the node IP
+- name: Rewrite kubeconfig server address to the node hostname
+  # Use the hostname instead of IP because Proxmox SDN resolves VM names to
+  # their current DHCP IPs. This makes the kubeconfig immune to IP changes —
+  # no playbook re-run needed when the DHCP lease changes.
   ansible.builtin.replace:
     path: "{{ k3s_local_kubeconfig_path }}"
     regexp: 'https://127\.0\.0\.1:6443'
-    replace: 'https://{{ k3s_common_node_ip }}:6443'
+    replace: 'https://{{ inventory_hostname }}:6443'
   delegate_to: localhost
   become: false

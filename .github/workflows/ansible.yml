@@ -63,19 +63,28 @@ jobs:
       - name: Install Ansible & lint
         run: |
           pip install --upgrade pip
-          pip install ansible ansible-lint
+          # requests is required by the community.proxmox inventory
+          # plugin (used by inventory/proxmox.yml) at runtime.
+          pip install ansible ansible-lint requests
 
       - name: Install required collections
-        run: ansible-galaxy collection install community.general ansible.posix
+        # community.proxmox hosts the proxmox dynamic inventory plugin
+        # (community.general.proxmox was deprecated and moved there in
+        # community.general 15.0.0). ansible.posix provides the mount/sysctl
+        # modules used by the k3s roles.
+        run: ansible-galaxy collection install community.proxmox ansible.posix
 
       - name: Ansible Lint
         run: ansible-lint
 
-      - name: Cleanup apt
+      - name: Cleanup apt & SSH key
         if: always()
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
+          # Remove the ephemeral runner private key and per-run known_hosts
+          # written for this run.
+          rm -f "$HOME/.ssh/runner_ansible" "$HOME/.ssh/runner_known_hosts"
 
   ansible-apply:
     name: Ansible Apply
@@ -109,30 +118,97 @@ jobs:
       - name: Install Ansible
         run: |
           pip install --upgrade pip
-          pip install ansible
+          # requests is required by the community.proxmox inventory
+          # plugin (used by inventory/proxmox.yml) at runtime.
+          pip install ansible requests
 
       - name: Install required collections
-        run: ansible-galaxy collection install community.general ansible.posix
+        # community.proxmox hosts the proxmox dynamic inventory plugin
+        # (community.general.proxmox was deprecated and moved there in
+        # community.general 15.0.0). ansible.posix provides the mount/sysctl
+        # modules used by the k3s roles.
+        run: ansible-galaxy collection install community.proxmox ansible.posix
 
       - name: Resolve Proxmox API URL
+        # community.proxmox appends '/api2/json' to the url itself, so the
+        # base URL must NOT include it (otherwise the path doubles up and the
+        # API returns 501).
         run: |
           PROXMOX_IP=$(ip route show default | awk '{print $3}')
-          echo "PM_API_URL=https://${PROXMOX_IP}:8006/api2/json" >> $GITHUB_ENV
+          echo "PM_API_URL=https://${PROXMOX_IP}:8006" >> $GITHUB_ENV
+
+      - name: Install runner SSH key for Ansible
+        # The previous ForwardAgent model failed in CI because no SSH agent
+        # socket is available to the runner. Instead we write the runner's
+        # private key (SSH_RUNNER_ANSIBLE_PRIVATE) to a file and point Ansible
+        # at it via ANSIBLE_SSH_KEY_FILE. The matching public key
+        # (SSH_RUNNER_ANSIBLE_PUBLIC) is injected into the Terraform cloud-init
+        # user's authorized_keys (var.vm_defaults.ciuser, default "admin"), so
+        # Ansible logs in as that user and escalates with become. We also use a
+        # fresh per-run known_hosts (ANSIBLE_SSH_KNOWN_HOSTS) with
+        # StrictHostKeyChecking=accept-new so a recreated VM with a new host key
+        # does not trip "REMOTE HOST IDENTIFICATION HAS CHANGED". Both files are
+        # cleaned up at the end of the job.
+        run: |
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "${{ secrets.SSH_RUNNER_ANSIBLE_PRIVATE }}" > "$HOME/.ssh/runner_ansible"
+          chmod 600 "$HOME/.ssh/runner_ansible"
+          : > "$HOME/.ssh/runner_known_hosts"
+          echo "ANSIBLE_SSH_KEY_FILE=$HOME/.ssh/runner_ansible" >> "$GITHUB_ENV"
+          echo "ANSIBLE_SSH_KNOWN_HOSTS=$HOME/.ssh/runner_known_hosts" >> "$GITHUB_ENV"
 
       - name: Show resolved inventory
-        run: ansible-inventory -i inventory/proxmox.yml --list
+        run: |
+          ansible-inventory -i inventory --list
+          # Fail loudly if the dynamic inventory resolved no hosts, instead of
+          # silently skipping every play (which would still exit 0).
+          # community.proxmox lists hosts under _meta.hostvars (not directly
+          # under all.hosts), so count from there and exclude implicit localhost.
+          HOST_COUNT=$(ansible-inventory -i inventory --list \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([h for h in d.get('_meta',{}).get('hostvars',{}) if h!='localhost']))")
+          echo "Resolved $HOST_COUNT non-localhost host(s)"
+          if [ "$HOST_COUNT" -eq 0 ]; then
+            echo "::error::Inventory resolved 0 hosts - aborting (check Proxmox API token / network)."
+            exit 1
+          fi
+
+      - name: Debug resolved host vars for prod
+        # Print the connection vars Ansible actually computes for the prod host
+        # (ansible_user, ansible_host, ansible_ssh_private_key_file,
+        # ansible_ssh_common_args) so we can confirm the runner key is wired up
+        # correctly. Redact nothing sensitive here — these are local paths only.
+        run: |
+          ansible-inventory -i inventory --host prod
+
+      - name: Debug SSH connection to prod (ping -vvvv)
+        # Verbose ad-hoc ping to surface the exact SSH command Ansible builds
+        # (key file, user, host, ProxyCommand/ssh_args) and the real auth
+        # failure reason. -vvvv prints the ssh invocation and debug output.
+        run: |
+          ansible -i inventory prod -m ping -vvvv
 
       - name: Ansible Playbook (k3s bootstrap)
+        # If the K3S_TOKEN secret is not set, generate a random one at runtime so
+        # the workflow still works for ad-hoc / workflow_dispatch runs.
         run: |
-          ansible-playbook -i inventory/proxmox.yml playbooks/site.yml \
-            --extra-vars "k3s_token=${{ secrets.K3S_TOKEN }}"
+          K3S_TOKEN="${{ secrets.K3S_TOKEN }}"
+          if [ -z "$K3S_TOKEN" ]; then
+            K3S_TOKEN=$(openssl rand -hex 32)
+            echo "::warning::K3S_TOKEN secret is empty — generated ephemeral token (will change on next run)"
+          fi
+          ansible-playbook -i inventory playbooks/site.yml \
+            --extra-vars "k3s_token=${K3S_TOKEN}"
         env:
           PM_API_URL: ${{ env.PM_API_URL }}
           PM_API_TOKEN_ID: ${{ secrets.PM_API_TOKEN_ID }}
           PM_API_TOKEN_SECRET: ${{ secrets.PM_API_TOKEN_SECRET }}
 
-      - name: Cleanup apt
+      - name: Cleanup apt & SSH key
         if: always()
         run: |
           sudo apt-get clean
           sudo apt-get autoremove -y
+          # Remove the ephemeral runner private key and per-run known_hosts
+          # written for this run.
+          rm -f "$HOME/.ssh/runner_ansible" "$HOME/.ssh/runner_known_hosts"

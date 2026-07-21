@@ -1,0 +1,69 @@
+# Shared variables for the entire lab k3s cluster.
+#
+# Secrets (k3s_token) must NOT be committed. Override at runtime with
+# --extra-vars "k3s_token=..." or an Ansible vault file. A placeholder is
+# provided only so the playbook is syntactically valid; the real token should
+# be a random 32+ char string, e.g. `openssl rand -hex 32`.
+
+# --- k3s release ---
+k3s_version: "v1.30.4+k3s1"
+
+# --- cluster join token (OVERRIDE, do not commit a real value) ---
+k3s_token: "CHANGE_ME_TO_A_RANDOM_TOKEN"
+
+# --- networking ---
+# Guest NIC for node IP resolution. Since this is a single-node cluster, k3s
+# is installed without --node-ip / --advertise-address (binds to 0.0.0.0).
+# The resolved IP from this interface is only used to rewrite the fetched
+# kubeconfig so the runner can reach the cluster via kubectl.
+# The prod VM gets its DHCP address on this interface (bridged onto the
+# Proxmox `vnet1` bridge, 10.10.0.0/24).
+# The k3s_common role resolves the node IP from this interface when present
+# in facts, and falls back to ansible_default_ipv4 otherwise.
+cluster_interface: "eth0"
+
+# --- CNI / flannel ---
+# Default k3s CNI is flannel. Set to "calico"/"cilium" to switch if desired.
+k3s_cni: "flannel"
+
+# --- optional bundled components ---
+# k3s ships traefik as the default ingress. Set false to disable.
+k3s_disable_traefik: false
+# Other k3s defaults kept on: servicelb, local-storage, metrics-server.
+
+# --- install / maintenance toggles ---
+# Run `apt update` + upgrade before installing k3s (recommended so the node
+# gets the latest kernel/modules/security patches). Set false to skip.
+k3s_apt_upgrade: true
+# Where to drop the fetched admin kubeconfig on the controller running Ansible.
+k3s_local_kubeconfig_path: "./kubeconfig-prod.yaml"
+
+# --- SSH connection (key-based auth) ---
+# Connect as the Terraform cloud-init user (var.vm_defaults.ciuser, default
+# "admin"); Terraform injects the runner's public key into THIS account's
+# authorized_keys, not root. The private key is written by the workflow from
+# the SSH_RUNNER_ANSIBLE_PRIVATE secret to ANSIBLE_SSH_KEY_FILE. A per-run
+# known_hosts (ANSIBLE_SSH_KNOWN_HOSTS) with accept-new avoids the
+# "REMOTE HOST IDENTIFICATION HAS CHANGED" failure on VM recreate.
+# NOTE: these MUST live in group_vars (Jinja-evaluated), NOT in ansible.cfg
+# (not Jinja-evaluated) and NOT in the community.proxmox inventory compose
+# block (ignored by the plugin).
+ansible_user: admin
+ansible_ssh_private_key_file: "{{ lookup('env', 'ANSIBLE_SSH_KEY_FILE') | default('~/.ssh/id_ed25519', true) }}"
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=accept-new
+  -o UserKnownHostsFile={{ lookup('env', 'ANSIBLE_SSH_KNOWN_HOSTS') | default('~/.ssh/known_hosts', true) }}
+
+# --- Python interpreter (target host) ---
+# Pin the Python interpreter so Ansible does not auto-discover it at runtime.
+# Without an explicit value, Ansible logs:
+#   [WARNING]: Host 'prod' is using the discovered Python interpreter at
+#   /usr/bin/python3.13, but future installation of another Python interpreter
+#   could cause a different interpreter to be discovered.
+# Setting it here removes the ambiguity and the warning.
+# We use /usr/bin/python3 (not /usr/bin/python3.13) because it is a Debian
+# alternatives-managed symlink that survives distro upgrades.
+# Note: this is the TARGET host's Python (prod VM), not the control node's
+# venv (~/.infra_venv on the runner). The control node venv is configured
+# separately by the workflow and does not affect how modules execute remotely.
+ansible_python_interpreter: /usr/bin/python3
