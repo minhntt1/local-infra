@@ -34,3 +34,4 @@
   become: true
   roles:
     - role: k3s_agent
+  when: groups['k3s_agents'] | length > 0

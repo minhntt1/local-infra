@@ -44,6 +44,19 @@
   delay: 10
   changed_when: false
 
+- name: Remove control-plane taint for single-node scheduling
+  # By default k3s applies node-role.kubernetes.io/control-plane:NoSchedule
+  # to the server node. In a single-node cluster with no agents, this would
+  # prevent any pod from being scheduled. Removing the taint allows user
+  # workloads to run on the control-plane node.
+  ansible.builtin.command:
+    cmd: >-
+      k3s kubectl taint nodes --all
+      node-role.kubernetes.io/control-plane:NoSchedule-
+  register: taint_result
+  changed_when: "'not found' not in taint_result.stderr"
+  failed_when: taint_result.rc != 0 and "not found" not in taint_result.stderr
+
 - name: Fetch admin kubeconfig to the Ansible controller
   ansible.builtin.fetch:
     src: /etc/rancher/k3s/k3s.yaml
