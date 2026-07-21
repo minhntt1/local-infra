@@ -53,9 +53,9 @@
     cmd: >-
       k3s kubectl taint nodes --all
       node-role.kubernetes.io/control-plane:NoSchedule-
-  register: taint_result
-  changed_when: "'not found' not in taint_result.stderr"
-  failed_when: taint_result.rc != 0 and "not found" not in taint_result.stderr
+  register: k3s_server_taint_result
+  changed_when: "'not found' not in k3s_server_taint_result.stderr"
+  failed_when: k3s_server_taint_result.rc != 0 and "not found" not in k3s_server_taint_result.stderr
 
 - name: Fetch admin kubeconfig to the Ansible controller
   ansible.builtin.fetch:
