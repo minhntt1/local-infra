@@ -189,9 +189,16 @@ jobs:
           ansible -i inventory prod -m ping -vvvv
 
       - name: Ansible Playbook (k3s bootstrap)
+        # If the K3S_TOKEN secret is not set, generate a random one at runtime so
+        # the workflow still works for ad-hoc / workflow_dispatch runs.
         run: |
+          K3S_TOKEN="${{ secrets.K3S_TOKEN }}"
+          if [ -z "$K3S_TOKEN" ]; then
+            K3S_TOKEN=$(openssl rand -hex 32)
+            echo "::warning::K3S_TOKEN secret is empty — generated ephemeral token (will change on next run)"
+          fi
           ansible-playbook -i inventory playbooks/site.yml \
-            --extra-vars "k3s_token=${{ secrets.K3S_TOKEN }}"
+            --extra-vars "k3s_token=${K3S_TOKEN}"
         env:
           PM_API_URL: ${{ env.PM_API_URL }}
           PM_API_TOKEN_ID: ${{ secrets.PM_API_TOKEN_ID }}
