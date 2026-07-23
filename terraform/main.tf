@@ -12,6 +12,9 @@ resource "proxmox_virtual_environment_file" "nat_hook" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
+  # Hook scripts must be executable, otherwise the Proxmox VE API will reject
+  # the configuration for the VM/CT.
+  file_mode    = "0700"
 
   source_raw {
     data = templatefile("${path.module}/templates/nat-hook.sh.tpl", {
