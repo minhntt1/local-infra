@@ -49,27 +49,6 @@ SCRIPTEOF
     EOC
   }
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<EOC
-      SCRIPT_NAME="nat-hook-${each.key}.sh"
-      PROXMOX_IP=$(ip route show default | awk '{print $3}')
-
-      # Remove the hook script reference from the VM
-      curl -sk \
-        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
-        -X PUT \
-        -d "delete=hookscript" \
-        "https://${PROXMOX_IP}:8006/api2/json/nodes/${var.target_node}/qemu/${each.value.vm_id}/config" 2>/dev/null || true
-
-      # Delete the snippet file from the storage
-      curl -sk \
-        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
-        -X DELETE \
-        "https://${PROXMOX_IP}:8006/api2/json/nodes/${var.target_node}/storage/local/content/local:snippets/${SCRIPT_NAME}" 2>/dev/null || true
-    EOC
-  }
-
   depends_on = [proxmox_virtual_environment_vm.vm]
 }
 
