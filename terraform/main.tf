@@ -1,8 +1,32 @@
+# Upload NAT hook scripts per VM.
+# These are placed in Proxmox's snippet storage so the VM hook mechanism can
+# reference them. Each script resolves the VM's current IP via the QEMU guest
+# agent at runtime (no hardcoded IPs) and installs/removes iptables DNAT rules
+# for the configured port forwards.
+resource "proxmox_virtual_environment_file" "nat_hook" {
+  for_each = {
+    for name, vm in var.vms : name => vm
+    if length(vm.forwards) > 0
+  }
+
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.target_node
+
+  source_raw {
+    data = templatefile("${path.module}/templates/nat-hook.sh.tpl", {
+      forwards = each.value.forwards
+    })
+    file_name = "nat-hook-${each.key}.sh"
+    file_mode = "0755"
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "vm" {
   for_each = var.vms
 
   node_name = var.target_node
-  vm_id     = each.key == "prod" ? 200 : 201
+  vm_id     = each.value.vm_id
   name      = each.key
   # Desired power state is driven by var.vm_power_state (keyed by VM name).
   # "started" => power on and auto-start on host boot; "stopped" => power off
@@ -72,6 +96,11 @@ resource "proxmox_virtual_environment_vm" "vm" {
       keys = var.ssh_public_keys == "" ? [] : [var.ssh_public_keys]
     }
   }
+
+  # Wire the NAT hook script when forwards are configured for this VM.
+  # VMs with no forwards do not produce a hook file resource, so use
+  # try() to gracefully fall back to null (no hook script attached).
+  hook_script_file_id = try(proxmox_virtual_environment_file.nat_hook[each.key].id, null)
 
   lifecycle {
     ignore_changes = [

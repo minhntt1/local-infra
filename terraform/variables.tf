@@ -46,22 +46,34 @@ variable "vm_defaults" {
 }
 
 variable "vms" {
-  description = "Map of VMs to create"
+  description = "Map of VMs to create. Each VM can optionally specify port forwards for NAT iptables rules on the Proxmox host."
   type = map(object({
+    vm_id   = number
     cores   = number
     memory  = number
     disk_gb = number
+    forwards = list(object({
+      protocol      = string
+      public_port   = number
+      internal_port = number
+    }))
   }))
   default = {
     prod = {
+      vm_id   = 200
       cores   = 4
       memory  = 8192
       disk_gb = 50
+      forwards = [
+        { protocol = "tcp", public_port = 8080, internal_port = 8080 }
+      ]
     }
     dev = {
+      vm_id   = 201
       cores   = 2
       memory  = 4096
       disk_gb = 25
+      forwards = []
     }
   }
 }

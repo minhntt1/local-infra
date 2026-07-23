@@ -15,10 +15,10 @@
 
 import {
   to = proxmox_virtual_environment_vm.vm["prod"]
-  id = "${var.target_node}/200"
+  id = "${var.target_node}/${var.vms["prod"].vm_id}"
 }
 
 import {
   to = proxmox_virtual_environment_vm.vm["dev"]
-  id = "${var.target_node}/201"
+  id = "${var.target_node}/${var.vms["dev"].vm_id}"
 }
