@@ -10,6 +10,10 @@
 #   $2 = phase (pre-start / post-start / pre-stop / post-stop)
 set -uo pipefail
 
+# Maximum seconds to wait for the QEMU guest agent to become responsive.
+MAX_WAIT=30
+WAIT_INTERVAL=2
+
 VMID="$${1}"
 PHASE="$${2}"
 
@@ -42,11 +46,29 @@ del_rule() {
 # post-start: VM is running, resolve IP and add NAT rules.
 # pre-stop: VM still running, resolve IP and remove NAT rules.
 # post-stop: round complete, nothing to do.
+# During post-start it may take several seconds before the guest agent is up.
+wait_for_ip() {
+  local elapsed=0
+  while [ $elapsed -lt $MAX_WAIT ]; do
+    IP=$(resolve_ip) && return 0
+    sleep $WAIT_INTERVAL
+    elapsed=$((elapsed + WAIT_INTERVAL))
+  done
+  return 1
+}
+
 if [ "$${PHASE}" = "post-start" ] || [ "$${PHASE}" = "pre-stop" ]; then
-  IP=$(resolve_ip) || {
-    echo "WARNING: Failed to resolve IP for VM $${VMID} — port forwarding not applied" >&2
-    exit 0
-  }
+  if [ "$${PHASE}" = "post-start" ]; then
+    if ! wait_for_ip; then
+      echo "WARNING: Failed to resolve IP for VM $${VMID} after ${MAX_WAIT}s — port forwarding not applied" >&2
+      exit 0
+    fi
+  else
+    IP=$(resolve_ip) || {
+      echo "WARNING: Failed to resolve IP for VM $${VMID} — port forwarding not removed" >&2
+      exit 0
+    }
+  fi
   if [ "$${PHASE}" = "post-start" ]; then
 %{ for f in forwards ~}
     add_rule ${f.protocol} ${f.public_port} ${f.internal_port}
