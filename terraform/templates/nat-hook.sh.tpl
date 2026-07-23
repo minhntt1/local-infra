@@ -8,7 +8,7 @@
 # Arguments passed by Proxmox:
 #   $1 = VMID
 #   $2 = phase (pre-start / post-start / pre-stop / post-stop)
-set -euo pipefail
+set -uo pipefail
 
 VMID="$${1}"
 PHASE="$${2}"
@@ -25,10 +25,8 @@ for iface in data.get('result', []):
         if addr.get('ip-address-type') == 'ipv4' and not addr['ip-address'].startswith('127.'):
             print(addr['ip-address'])
             sys.exit(0)
-" 2>/dev/null || {
-    echo "ERROR: Failed to resolve IP for VM $${VMID}" >&2
-    exit 1
-  }
+" 2>/dev/null && return 0
+  return 1
 }
 
 add_rule() {
@@ -40,16 +38,24 @@ del_rule() {
   iptables -t nat -D PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3" 2>/dev/null || true
 }
 
-if [ "$${PHASE}" = "post-start" ]; then
-  IP=$(resolve_ip)
+# pre-start: VM not booted yet, guest agent unavailable — silently skip.
+# post-start: VM is running, resolve IP and add NAT rules.
+# pre-stop: VM still running, resolve IP and remove NAT rules.
+# post-stop: round complete, nothing to do.
+if [ "$${PHASE}" = "post-start" ] || [ "$${PHASE}" = "pre-stop" ]; then
+  IP=$(resolve_ip) || {
+    echo "WARNING: Failed to resolve IP for VM $${VMID} — port forwarding not applied" >&2
+    exit 0
+  }
+  if [ "$${PHASE}" = "post-start" ]; then
 %{ for f in forwards ~}
-  add_rule ${f.protocol} ${f.public_port} ${f.internal_port}
+    add_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
-  echo "NAT rules added for VM $${VMID} ($${IP})"
-elif [ "$${PHASE}" = "pre-stop" ]; then
-  IP=$(resolve_ip)
+    echo "NAT rules added for VM $${VMID} ($${IP})"
+  else
 %{ for f in forwards ~}
-  del_rule ${f.protocol} ${f.public_port} ${f.internal_port}
+    del_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
-  echo "NAT rules removed for VM $${VMID} ($${IP})"
+    echo "NAT rules removed for VM $${VMID} ($${IP})"
+  fi
 fi
