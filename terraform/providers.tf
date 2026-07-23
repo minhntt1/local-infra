@@ -10,7 +10,8 @@ terraform {
 
 provider "proxmox" {
   endpoint  = var.pm_api_url
-  api_token = "${var.pm_api_token_id}=${var.pm_api_token_secret}"
+  username  = var.pm_api_username
+  password  = var.pm_api_password
   insecure  = true
 
   ssh {

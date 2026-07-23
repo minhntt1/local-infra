@@ -65,8 +65,8 @@ jobs:
 
     env:
       TF_IN_AUTOMATION: "true"
-      TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-      TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+      TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+      TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
       TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
       TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
@@ -96,8 +96,8 @@ jobs:
         run: terraform validate
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
-          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+          TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
           TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
@@ -105,8 +105,8 @@ jobs:
         run: terraform plan -out=tfplan
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
-          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+          TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
           TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
@@ -125,8 +125,8 @@ jobs:
 
     env:
       TF_IN_AUTOMATION: "true"
-      TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-      TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+      TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+      TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
       TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
       TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
@@ -159,8 +159,8 @@ jobs:
         run: terraform init
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
-          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+          TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
           TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
@@ -168,7 +168,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
-          TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
-          TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
+          TF_VAR_pm_api_username: ${{ secrets.PM_API_USERNAME }}
+          TF_VAR_pm_api_password: ${{ secrets.PM_API_PASSWORD }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
           TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}

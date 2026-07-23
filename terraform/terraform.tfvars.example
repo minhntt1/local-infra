@@ -1,7 +1,7 @@
 # Proxmox API Configuration
-pm_api_url          = "https://<proxmox-ip>:8006/api2/json"
-pm_api_token_id     = "admin@pve!terraform"
-pm_api_token_secret = "<your-token-secret>"
+pm_api_url      = "https://<proxmox-ip>:8006/api2/json"
+pm_api_username = "admin@pve"
+pm_api_password = "<your-password>"
 
 # VM Configuration (optional overrides)
 # template_name = "debian13-cloudinit-template"
