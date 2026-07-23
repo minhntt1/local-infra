@@ -68,6 +68,7 @@ jobs:
       TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
       TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
       TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+      TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
     defaults:
       run:
@@ -98,6 +99,7 @@ jobs:
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+          TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
@@ -106,6 +108,7 @@ jobs:
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+          TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -125,6 +128,7 @@ jobs:
       TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
       TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
       TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+      TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
     defaults:
       run:
@@ -158,6 +162,7 @@ jobs:
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+          TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
@@ -166,3 +171,4 @@ jobs:
           TF_VAR_pm_api_token_id: ${{ secrets.PM_API_TOKEN_ID }}
           TF_VAR_pm_api_token_secret: ${{ secrets.PM_API_TOKEN_SECRET }}
           TF_VAR_ssh_public_keys: ${{ secrets.SSH_RUNNER_ANSIBLE_PUBLIC }}
+          TF_VAR_ssh_pm_private_key: ${{ secrets.SSH_RUNNER_PM_PRIVATE }}

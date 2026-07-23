@@ -105,3 +105,9 @@ variable "ssh_public_keys" {
   sensitive   = true
   default     = ""
 }
+
+variable "ssh_pm_private_key" {
+  description = "SSH private key for authenticating to the Proxmox host as user1. Required by the bpg/proxmox provider for file operations (e.g. uploading hook scripts to the snippets datastore). Sourced from the SSH_RUNNER_PM_PRIVATE GitHub secret."
+  type        = string
+  sensitive   = true
+}
