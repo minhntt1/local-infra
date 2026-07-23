@@ -1,24 +1,76 @@
-# Upload NAT hook scripts per VM.
-# These are placed in Proxmox's snippet storage so the VM hook mechanism can
-# reference them. Each script resolves the VM's current IP via the QEMU guest
-# agent at runtime (no hardcoded IPs) and installs/removes iptables DNAT rules
-# for the configured port forwards.
-resource "proxmox_virtual_environment_file" "nat_hook" {
+# Upload NAT hook scripts per VM and register them via the Proxmox API.
+# Uses local-exec with curl + the API token (same auth as the provider) instead
+# of proxmox_virtual_environment_file, which requires SSH that the runner doesn't have.
+resource "null_resource" "nat_hook" {
   for_each = {
     for name, vm in var.vms : name => vm
     if length(vm.forwards) > 0
   }
 
-  content_type = "snippets"
-  datastore_id = "local"
-  node_name    = var.target_node
-
-  source_raw {
-    data = templatefile("${path.module}/templates/nat-hook.sh.tpl", {
+  triggers = {
+    template_hash = sha256(templatefile("${path.module}/templates/nat-hook.sh.tpl", {
       forwards = each.value.forwards
-    })
-    file_name = "nat-hook-${each.key}.sh"
+    }))
+    vm_id = each.value.vm_id
   }
+
+  provisioner "local-exec" {
+    command = <<EOC
+      SCRIPT_NAME="nat-hook-${each.key}.sh"
+      SCRIPT_PATH="/var/lib/vz/snippets/${SCRIPT_NAME}"
+
+      # Write the rendered hook script to a temp file
+      cat > /tmp/${SCRIPT_NAME} << 'SCRIPTEOF'
+${templatefile("${path.module}/templates/nat-hook.sh.tpl", {
+  forwards = each.value.forwards
+})}
+SCRIPTEOF
+
+      # Upload the snippet file to the Proxmox host's local storage via the API.
+      # The API endpoint for file upload to a storage is:
+      # POST /nodes/{node}/storage/{storage}/upload
+      # with content-type= snippets and the file as multipart form data.
+      curl -sk \
+        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
+        -X POST \
+        -F "content=snippets" \
+        -F "filename=@/tmp/${SCRIPT_NAME}" \
+        "https://$(ip route show default | awk '{print $3}'):8006/api2/json/nodes/${var.target_node}/storage/local/upload"
+
+      # Set the hook script on the VM via the API.
+      # PUT /nodes/{node}/qemu/{vmid}/config
+      curl -sk \
+        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
+        -X PUT \
+        -d "hookscript=local:snippets/${SCRIPT_NAME}" \
+        "https://$(ip route show default | awk '{print $3}'):8006/api2/json/nodes/${var.target_node}/qemu/${each.value.vm_id}/config"
+
+      rm -f /tmp/${SCRIPT_NAME}
+    EOC
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<EOC
+      SCRIPT_NAME="nat-hook-${each.key}.sh"
+      PROXMOX_IP=$(ip route show default | awk '{print $3}')
+
+      # Remove the hook script reference from the VM
+      curl -sk \
+        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
+        -X PUT \
+        -d "delete=hookscript" \
+        "https://${PROXMOX_IP}:8006/api2/json/nodes/${var.target_node}/qemu/${each.value.vm_id}/config" 2>/dev/null || true
+
+      # Delete the snippet file from the storage
+      curl -sk \
+        --header "Authorization: Proxmox ${var.pm_api_token_id}=${var.pm_api_token_secret}" \
+        -X DELETE \
+        "https://${PROXMOX_IP}:8006/api2/json/nodes/${var.target_node}/storage/local/content/local:snippets/${SCRIPT_NAME}" 2>/dev/null || true
+    EOC
+  }
+
+  depends_on = [proxmox_virtual_environment_vm.vm]
 }
 
 resource "proxmox_virtual_environment_vm" "vm" {
@@ -95,11 +147,6 @@ resource "proxmox_virtual_environment_vm" "vm" {
       keys = var.ssh_public_keys == "" ? [] : [var.ssh_public_keys]
     }
   }
-
-  # Wire the NAT hook script when forwards are configured for this VM.
-  # VMs with no forwards do not produce a hook file resource, so use
-  # try() to gracefully fall back to null (no hook script attached).
-  hook_script_file_id = try(proxmox_virtual_environment_file.nat_hook[each.key].id, null)
 
   lifecycle {
     ignore_changes = [
