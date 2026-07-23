@@ -69,10 +69,10 @@ variable "vms" {
       ]
     }
     dev = {
-      vm_id   = 201
-      cores   = 2
-      memory  = 4096
-      disk_gb = 25
+      vm_id    = 201
+      cores    = 2
+      memory   = 4096
+      disk_gb  = 25
       forwards = []
     }
   }

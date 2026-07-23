@@ -18,7 +18,6 @@ resource "proxmox_virtual_environment_file" "nat_hook" {
       forwards = each.value.forwards
     })
     file_name = "nat-hook-${each.key}.sh"
-    file_mode = "0755"
   }
 }
 

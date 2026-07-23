@@ -10,13 +10,13 @@
 #   $2 = phase (pre-start / post-start / pre-stop / post-stop)
 set -euo pipefail
 
-VMID="${1}"
-PHASE="${2}"
+VMID="$${1}"
+PHASE="$${2}"
 
 resolve_ip() {
   # Query the QEMU guest agent for the VM's current IPv4 address.
   # Falls back to the first IPv4 address found on any interface (excluding loopback).
-  pvesh get "/nodes/localhost/qemu/${VMID}/agent/network-get-interfaces" --output-format json 2>/dev/null \
+  pvesh get "/nodes/localhost/qemu/$${VMID}/agent/network-get-interfaces" --output-format json 2>/dev/null \
     | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -26,7 +26,7 @@ for iface in data.get('result', []):
             print(addr['ip-address'])
             sys.exit(0)
 " 2>/dev/null || {
-    echo "ERROR: Failed to resolve IP for VM ${VMID}" >&2
+    echo "ERROR: Failed to resolve IP for VM $${VMID}" >&2
     exit 1
   }
 }
@@ -34,22 +34,22 @@ for iface in data.get('result', []):
 IP=$(resolve_ip)
 
 add_rule() {
-  iptables -t nat -C PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "${IP}:$3" 2>/dev/null || \
-  iptables -t nat -A PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "${IP}:$3"
+  iptables -t nat -C PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3" 2>/dev/null || \
+  iptables -t nat -A PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3"
 }
 
 del_rule() {
-  iptables -t nat -D PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "${IP}:$3" 2>/dev/null || true
+  iptables -t nat -D PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3" 2>/dev/null || true
 }
 
-if [ "${PHASE}" = "post-start" ]; then
+if [ "$${PHASE}" = "post-start" ]; then
 %{ for f in forwards ~}
   add_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
-  echo "NAT rules added for VM ${VMID} (${IP})"
-elif [ "${PHASE}" = "pre-stop" ]; then
+  echo "NAT rules added for VM $${VMID} ($${IP})"
+elif [ "$${PHASE}" = "pre-stop" ]; then
 %{ for f in forwards ~}
   del_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
-  echo "NAT rules removed for VM ${VMID} (${IP})"
+  echo "NAT rules removed for VM $${VMID} ($${IP})"
 fi
