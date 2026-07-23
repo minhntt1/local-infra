@@ -31,8 +31,6 @@ for iface in data.get('result', []):
   }
 }
 
-IP=$(resolve_ip)
-
 add_rule() {
   iptables -t nat -C PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3" 2>/dev/null || \
   iptables -t nat -A PREROUTING -i vmbr0 -p "$1" --dport "$2" -j DNAT --to-destination "$${IP}:$3"
@@ -43,11 +41,13 @@ del_rule() {
 }
 
 if [ "$${PHASE}" = "post-start" ]; then
+  IP=$(resolve_ip)
 %{ for f in forwards ~}
   add_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
   echo "NAT rules added for VM $${VMID} ($${IP})"
 elif [ "$${PHASE}" = "pre-stop" ]; then
+  IP=$(resolve_ip)
 %{ for f in forwards ~}
   del_rule ${f.protocol} ${f.public_port} ${f.internal_port}
 %{ endfor ~}
