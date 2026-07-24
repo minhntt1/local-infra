@@ -1,8 +1,31 @@
+# Upload NAT hook scripts per VM.
+# These are placed in Proxmox's snippet storage so the VM hook mechanism can
+# reference them. Each script resolves the VM's current IP via the QEMU guest
+# agent at runtime (no hardcoded IPs) and installs/removes iptables DNAT rules
+# for the configured port forwards.
+resource "proxmox_virtual_environment_file" "nat_hook" {
+  for_each = var.vms
+
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.target_node
+  # Hook scripts must be executable, otherwise the Proxmox VE API will reject
+  # the configuration for the VM/CT.
+  file_mode = "0700"
+
+  source_raw {
+    data = templatefile("${path.module}/templates/nat-hook.sh.tpl", {
+      forwards = each.value.forwards
+    })
+    file_name = "nat-hook-${each.key}.sh"
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "vm" {
   for_each = var.vms
 
   node_name = var.target_node
-  vm_id     = each.key == "prod" ? 200 : 201
+  vm_id     = each.value.vm_id
   name      = each.key
   # Desired power state is driven by var.vm_power_state (keyed by VM name).
   # "started" => power on and auto-start on host boot; "stopped" => power off
@@ -73,9 +96,51 @@ resource "proxmox_virtual_environment_vm" "vm" {
     }
   }
 
+  # Wire the NAT hook script when forwards are configured for this VM.
+  # VMs with no forwards do not produce a hook file resource, so use
+  # try() to gracefully fall back to null (no hook script attached).
+  hook_script_file_id = proxmox_virtual_environment_file.nat_hook[each.key].id
+
   lifecycle {
     ignore_changes = [
       disk[0].file_id,
+    ]
+  }
+}
+
+# Re-applies NAT rules on the already-running VM the moment `forwards`
+# changes in any way (add, delete, update, or emptied entirely) — no VM
+# restart required.
+resource "null_resource" "nat_reconcile" {
+  for_each = var.vms
+
+  triggers = {
+    script_hash = sha1(templatefile("${path.module}/templates/nat-hook.sh.tpl", {
+      forwards = each.value.forwards
+    }))
+  }
+
+  depends_on = [
+    proxmox_virtual_environment_file.nat_hook,
+    proxmox_virtual_environment_vm.vm,
+  ]
+
+  connection {
+    type        = "ssh"
+    host        = var.pm_host
+    user        = "root"
+    private_key = var.ssh_pm_private_key
+  }
+
+  # Process discipline (simplest): when decommissioning a VM, 
+  # do it in two applies — set forwards = [] first 
+  # and apply (flushes cleanly via the fix above), 
+  # then remove the VM entirely in a follow-up apply.
+  provisioner "remote-exec" {
+    inline = [
+      # || true: don't fail the apply if the VM isn't up yet on first
+      # creation — native post-start will handle that case instead.
+      "bash /var/lib/vz/snippets/nat-hook-${each.key}.sh ${each.value.vm_id} reconcile || true"
     ]
   }
 }

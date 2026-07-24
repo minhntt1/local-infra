@@ -1,7 +1,7 @@
 # Proxmox API Configuration
-pm_api_url          = "https://<proxmox-ip>:8006/api2/json"
-pm_api_token_id     = "admin@pve!terraform"
-pm_api_token_secret = "<your-token-secret>"
+pm_api_url      = "https://<proxmox-ip>:8006/api2/json"
+pm_api_username = "admin@pve"
+pm_api_password = "<your-password>"
 
 # VM Configuration (optional overrides)
 # template_name = "debian13-cloudinit-template"
@@ -35,3 +35,28 @@ pm_api_token_secret = "<your-token-secret>"
 # SSH_RUNNER_ANSIBLE_PUBLIC GitHub secret via TF_VAR_ssh_public_keys.
 # For local runs, paste the public key here (single string; empty = no key):
 # ssh_public_keys = "ssh-ed25519 AAAA... runner@automation1"
+
+# VM definitions with optional NAT port forwards.
+# Each VM can specify forwards for iptables DNAT rules on the Proxmox host.
+# The hook script resolves the VM's IP dynamically via the QEMU guest agent,
+# so no hardcoded IP is needed — DHCP-assigned addresses work automatically.
+# To add a new VM, add an entry here and run terraform apply.
+# To add port forwards to an existing VM, add a forwards list.
+# vms = {
+#   prod = {
+#     vm_id   = 200
+#     cores   = 4
+#     memory  = 8192
+#     disk_gb = 50
+#     forwards = [
+#       { protocol = "tcp", public_port = 8080, internal_port = 8080 }
+#     ]
+#   }
+#   dev = {
+#     vm_id   = 201
+#     cores   = 2
+#     memory  = 4096
+#     disk_gb = 25
+#     forwards = []
+#   }
+# }

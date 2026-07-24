@@ -1,16 +1,22 @@
+variable "pm_host" {
+  description = "Proxmox host IP address or hostname (e.g. the Proxmox VE host itself, used for SSH connections)"
+  type        = string
+  sensitive   = true
+}
+
 variable "pm_api_url" {
   description = "Proxmox API endpoint"
   type        = string
 }
 
-variable "pm_api_token_id" {
-  description = "Proxmox API token ID (e.g. admin@pve!terraform)"
+variable "pm_api_username" {
+  description = "Proxmox API username (e.g. admin@pve)"
   type        = string
   sensitive   = true
 }
 
-variable "pm_api_token_secret" {
-  description = "Proxmox API token secret"
+variable "pm_api_password" {
+  description = "Proxmox API password"
   type        = string
   sensitive   = true
 }
@@ -46,22 +52,34 @@ variable "vm_defaults" {
 }
 
 variable "vms" {
-  description = "Map of VMs to create"
+  description = "Map of VMs to create. Each VM can optionally specify port forwards for NAT iptables rules on the Proxmox host."
   type = map(object({
+    vm_id   = number
     cores   = number
     memory  = number
     disk_gb = number
+    forwards = list(object({
+      protocol      = string
+      public_port   = number
+      internal_port = number
+    }))
   }))
   default = {
     prod = {
+      vm_id   = 200
       cores   = 4
       memory  = 8192
       disk_gb = 50
+      forwards = [
+        { protocol = "tcp", public_port = 8080, internal_port = 8080 }
+      ]
     }
     dev = {
-      cores   = 2
-      memory  = 4096
-      disk_gb = 25
+      vm_id    = 201
+      cores    = 2
+      memory   = 4096
+      disk_gb  = 25
+      forwards = []
     }
   }
 }
@@ -92,4 +110,10 @@ variable "ssh_public_keys" {
   type        = string
   sensitive   = true
   default     = ""
+}
+
+variable "ssh_pm_private_key" {
+  description = "SSH private key for authenticating to the Proxmox host as user1. Required by the bpg/proxmox provider for file operations (e.g. uploading hook scripts to the snippets datastore). Sourced from the SSH_RUNNER_PM_PRIVATE GitHub secret."
+  type        = string
+  sensitive   = true
 }
