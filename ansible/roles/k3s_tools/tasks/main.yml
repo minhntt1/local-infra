@@ -80,7 +80,7 @@
       - --set
       - server.service.type=NodePort
       - --set
-      - server.service.nodePortHttps=30080
+      - server.service.nodePortHttps=30808
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   register: k3s_tools_helm_install_result
