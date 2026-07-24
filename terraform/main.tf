@@ -103,6 +103,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   lifecycle {
     ignore_changes = [
+      initialization,
+      hook_script_file_id,
       disk[0].file_id,
     ]
   }
