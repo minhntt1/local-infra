@@ -1,18 +1,11 @@
-locals {
-  vms_with_forwards = {
-    for name, vm in var.vms : name => vm
-    if length(vm.forwards) > 0
-  }
-}
-
 # Upload NAT hook scripts per VM.
 # These are placed in Proxmox's snippet storage so the VM hook mechanism can
 # reference them. Each script resolves the VM's current IP via the QEMU guest
 # agent at runtime (no hardcoded IPs) and installs/removes iptables DNAT rules
 # for the configured port forwards.
 resource "proxmox_virtual_environment_file" "nat_hook" {
-  for_each = local.vms_with_forwards
-  
+  for_each = var.vms
+
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
