@@ -37,6 +37,10 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+concurrency: 
+  group: terraform 
+  cancel-in-progress: false
+
 jobs:
   terraform-fmt:
     name: Terraform Format
@@ -92,12 +96,12 @@ jobs:
 
       - name: Prepare Terraform state directory
         run: |
-          mkdir -p /home/infra/terraform/terraform.tfstate
+          mkdir -p /home/infra/terraform/state
 
       - name: Terraform Init
         run: |
           terraform init \
-            -backend-config="path=/home/infra/terraform/terraform.tfstate"
+            -backend-config="path=/home/infra/terraform/state/terraform.tfstate"
 
       - name: Terraform Validate
         run: terraform validate
@@ -167,12 +171,12 @@ jobs:
 
       - name: Prepare Terraform state directory
         run: |
-          mkdir -p /home/infra/terraform/terraform.tfstate
+          mkdir -p /home/infra/terraform/state
 
       - name: Terraform Init
         run: |
           terraform init \
-            -backend-config="path=/home/infra/terraform/terraform.tfstate"
+            -backend-config="path=/home/infra/terraform/state/terraform.tfstate"
         env:
           TF_VAR_pm_api_url: ${{ env.PM_API_URL }}
           TF_VAR_pm_host: ${{ env.PROXMOX_IP }}
