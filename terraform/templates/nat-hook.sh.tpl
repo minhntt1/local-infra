@@ -39,21 +39,23 @@ raise SystemExit(1)
 
 flush_rules() {
   local line
-  while line=$(iptables -t nat -L PREROUTING -n --line-numbers -w | awk -v t="$${TAG}" '$0 ~ t {print $1; exit}'); do
+  # Flush PREROUTING rules tagged for this VM
+  while line=$(iptables -t nat -L PREROUTING -n --line-numbers -w 2>/dev/null | awk -v t="$${TAG}" '$0 ~ t {print $1; exit}'); do
     [ -z "$${line}" ] && break
-    iptables -t nat -D PREROUTING -w "$${line}"
+    iptables -w -t nat -D PREROUTING "$${line}" 2>/dev/null || true
   done
-  while line=$(iptables -L FORWARD -n --line-numbers -w | awk -v t="$${TAG}" '$0 ~ t {print $1; exit}'); do
+  # Flush FORWARD rules tagged for this VM
+  while line=$(iptables -L FORWARD -n --line-numbers -w 2>/dev/null | awk -v t="$${TAG}" '$0 ~ t {print $1; exit}'); do
     [ -z "$${line}" ] && break
-    iptables -D FORWARD -w "$${line}"
+    iptables -w -D FORWARD "$${line}" 2>/dev/null || true
   done
 }
 
 add_rule() {
   local proto=$1 pub=$2 internal=$3
-  iptables -t nat -A PREROUTING -w -i "$${BRIDGE}" -p "$${proto}" --dport "$${pub}" \
+  iptables -w -t nat -A PREROUTING -i "$${BRIDGE}" -p "$${proto}" --dport "$${pub}" \
     -m comment --comment "$${TAG}" -j DNAT --to-destination "$${IP}:$${internal}"
-  iptables -A FORWARD -w -p "$${proto}" -d "$${IP}" --dport "$${internal}" \
+  iptables -w -A FORWARD -p "$${proto}" -d "$${IP}" --dport "$${internal}" \
     -m comment --comment "$${TAG}" -j ACCEPT
 }
 
