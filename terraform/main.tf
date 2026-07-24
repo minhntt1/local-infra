@@ -11,6 +11,8 @@ locals {
 # agent at runtime (no hardcoded IPs) and installs/removes iptables DNAT rules
 # for the configured port forwards.
 resource "proxmox_virtual_environment_file" "nat_hook" {
+  for_each = local.vms_with_forwards
+  
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
