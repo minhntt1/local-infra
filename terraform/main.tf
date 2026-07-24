@@ -127,7 +127,7 @@ resource "null_resource" "nat_reconcile" {
 
   connection {
     type        = "ssh"
-    host        = var.pm_api_url
+    host        = var.pm_host
     user        = "root"
     private_key = var.ssh_pm_private_key
   }

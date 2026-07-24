@@ -1,3 +1,9 @@
+variable "pm_host" {
+  description = "Proxmox host IP address or hostname (e.g. the Proxmox VE host itself, used for SSH connections)"
+  type        = string
+  sensitive   = true
+}
+
 variable "pm_api_url" {
   description = "Proxmox API endpoint"
   type        = string
