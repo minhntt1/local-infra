@@ -130,6 +130,10 @@
     src: /etc/rancher/k3s/k3s.yaml
   register: k3s_tools_kubeconfig
 
+- name: Decode k3s kubeconfig content
+  ansible.builtin.set_fact:
+    k3s_tools_kubeconfig_decoded: "{{ k3s_tools_kubeconfig['content'] | b64decode }}"
+
 - name: Display k3s kubeconfig content
   ansible.builtin.debug:
-    msg: "{{ k3s_tools_kubeconfig['content'] | b64decode }}"
+    var: k3s_tools_kubeconfig_decoded
