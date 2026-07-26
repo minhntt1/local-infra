@@ -81,13 +81,13 @@
 - name: Check if /dev/sdb secondary disk exists
   ansible.builtin.stat:
     path: /dev/sdb
-  register: sdb_disk_stat
+  register: k3s_common_sdb_disk_stat
 
 - name: Check if /dev/sdb1 partition already exists
   ansible.builtin.stat:
     path: /dev/sdb1
-  register: sdb1_part_stat
-  when: sdb_disk_stat.stat.exists
+  register: k3s_common_sdb1_part_stat
+  when: k3s_common_sdb_disk_stat.stat.exists
 
 - name: Create GPT partition table and single ext4 partition on /dev/sdb
   ansible.builtin.command:
@@ -99,10 +99,12 @@
   ansible.builtin.wait_for:
     path: /dev/sdb1
     timeout: 10
-  when: sdb_disk_stat.stat.exists and not (sdb1_part_stat.stat.exists | default(false))
+  when:
+    - k3s_common_sdb_disk_stat.stat.exists
+    - not (k3s_common_sdb1_part_stat.stat.exists | default(false))
 
 - name: Format /dev/sdb1 as ext4 (no-op if already formatted)
-  ansible.builtin.filesystem:
+  community.general.filesystem:
     fstype: ext4
     dev: /dev/sdb1
 
@@ -113,7 +115,7 @@
     mode: "0755"
 
 - name: Mount /dev/sdb1 at /data (idempotent, checks fstab and mount state)
-  ansible.builtin.mount:
+  ansible.posix.mount:
     path: /data
     src: /dev/sdb1
     fstype: ext4
