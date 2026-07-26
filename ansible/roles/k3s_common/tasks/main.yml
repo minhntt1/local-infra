@@ -72,6 +72,71 @@
       - lsb-release
     state: present
 
+# --- data disk (sdb) setup ---
+# The prod VM has a 20G secondary disk on data-hdd (scsi1, /dev/sdb).
+# Partition (GPT single ext4 partition), format, and mount to /data.
+# All tasks are idempotent: they detect existing state and skip if done.
+# On re-runs, only the mount and /data/k3s directory are re-checked.
+
+- name: Check if /dev/sdb secondary disk exists
+  ansible.builtin.stat:
+    path: /dev/sdb
+  register: k3s_common_sdb_disk_stat
+
+- name: Check if /dev/sdb1 partition already exists
+  ansible.builtin.stat:
+    path: /dev/sdb1
+  register: k3s_common_sdb1_part_stat
+  when: k3s_common_sdb_disk_stat.stat.exists
+
+- name: Ensure parted is installed
+  ansible.builtin.apt:
+    name: parted
+    state: present
+    update_cache: true
+  when: k3s_common_sdb_disk_stat.stat.exists
+
+- name: Create a primary partition spanning the entire disk
+  community.general.parted:
+    device: /dev/sdb
+    number: 1
+    label: gpt
+    state: present
+  when: k3s_common_sdb_disk_stat.stat.exists
+
+- name: Wait for /dev/sdb1 to appear after partitioning
+  ansible.builtin.wait_for:
+    path: /dev/sdb1
+    timeout: 10
+  when:
+    - k3s_common_sdb_disk_stat.stat.exists
+    - not (k3s_common_sdb1_part_stat.stat.exists | default(false))
+
+- name: Format /dev/sdb1 as ext4 (no-op if already formatted)
+  community.general.filesystem:
+    fstype: ext4
+    dev: /dev/sdb1
+
+- name: Create /data mount point
+  ansible.builtin.file:
+    path: /data
+    state: directory
+    mode: "0755"
+
+- name: Mount /dev/sdb1 at /data (idempotent, checks fstab and mount state)
+  ansible.posix.mount:
+    path: /data
+    src: /dev/sdb1
+    fstype: ext4
+    opts: defaults,noatime
+    state: mounted
+
+- name: Create /data/k3s directory
+  ansible.builtin.file:
+    path: /data/k3s
+    state: directory
+    mode: "0755"
+
 # Resolve the node IP for the kubeconfig rewrite. `cluster_interface`
 # (default "eth0") is the guest NIC name inside the VM, not the Proxmox
 # bridge. We first try the named interface from Ansible facts, falling
