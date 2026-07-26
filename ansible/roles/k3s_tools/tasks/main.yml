@@ -122,3 +122,14 @@
 - name: Display Helm releases
   ansible.builtin.debug:
     var: k3s_tools_releases.stdout
+
+# ---------- Kubeconfig ----------
+
+- name: Read k3s kubeconfig
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: k3s_tools_kubeconfig
+
+- name: Display k3s kubeconfig content
+  ansible.builtin.debug:
+    msg: "{{ k3s_tools_kubeconfig['content'] | b64decode }}"
