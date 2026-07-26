@@ -72,6 +72,16 @@ resource "proxmox_virtual_environment_vm" "vm" {
     ssd          = true
   }
 
+  dynamic "disk" {
+    for_each = each.value.extra_disks
+    content {
+      datastore_id = disk.value.datastore_id
+      interface    = disk.value.interface
+      size         = disk.value.size
+      ssd          = disk.value.ssd
+    }
+  }
+
   network_device {
     bridge = var.vm_defaults.bridge
   }
@@ -106,6 +116,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
       initialization,
       hook_script_file_id,
       disk[0].file_id,
+      disk[1].file_id,
     ]
   }
 }

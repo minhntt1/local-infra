@@ -63,6 +63,12 @@ variable "vms" {
       public_port   = number
       internal_port = number
     }))
+    extra_disks = optional(list(object({
+      datastore_id = string
+      interface    = string
+      size         = number
+      ssd          = optional(bool, false)
+    })), [])
   }))
   default = {
     prod = {
@@ -73,14 +79,23 @@ variable "vms" {
       forwards = [
         { protocol = "tcp", public_port = 8080, internal_port = 30808 }
       ]
+      extra_disks = [
+        {
+          datastore_id = "data-hdd"
+          interface    = "scsi1"
+          size         = 20
+          ssd          = false
+        }
+      ]
     }
-    dev = {
-      vm_id    = 201
-      cores    = 2
-      memory   = 4096
-      disk_gb  = 25
-      forwards = []
-    }
+    # dev = {
+    #   vm_id       = 201
+    #   cores       = 2
+    #   memory      = 4096
+    #   disk_gb     = 25
+    #   forwards    = []
+    #   extra_disks = []
+    # }
   }
 }
 
@@ -95,7 +110,7 @@ variable "vm_power_state" {
   type        = map(string)
   default = {
     prod = "started"
-    dev  = "stopped"
+    # dev  = "stopped"
   }
   validation {
     condition = alltrue([

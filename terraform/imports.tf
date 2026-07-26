@@ -18,7 +18,7 @@ import {
   id = "${var.target_node}/${var.vms["prod"].vm_id}"
 }
 
-import {
-  to = proxmox_virtual_environment_vm.vm["dev"]
-  id = "${var.target_node}/${var.vms["dev"].vm_id}"
-}
+# import {
+#   to = proxmox_virtual_environment_vm.vm["dev"]
+#   id = "${var.target_node}/${var.vms["dev"].vm_id}"
+# }
