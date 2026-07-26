@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  repository: grafana/loki
+  tag: 3.5.6
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3100
+
+persistence:
+  size: 10Gi
+  storageClass: local-path
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
