@@ -93,7 +93,7 @@
   ansible.builtin.apt:
     name: parted
     state: present
-    update_cache: yes
+    update_cache: true
   when: k3s_common_sdb_disk_stat.stat.exists
 
 - name: Create a primary partition spanning the entire disk
