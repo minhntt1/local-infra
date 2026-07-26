@@ -93,7 +93,7 @@
   ansible.builtin.command:
     cmd: parted -s /dev/sdb mklabel gpt mkpart primary ext4 0% 100%
     creates: /dev/sdb1
-  when: sdb_disk_stat.stat.exists
+  when: k3s_common_sdb_disk_stat.stat.exists
 
 - name: Wait for /dev/sdb1 to appear after partitioning
   ansible.builtin.wait_for:
