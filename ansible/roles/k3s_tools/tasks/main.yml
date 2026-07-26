@@ -125,15 +125,12 @@
 
 # ---------- Kubeconfig ----------
 
-- name: Read k3s kubeconfig
-  ansible.builtin.slurp:
-    src: /etc/rancher/k3s/k3s.yaml
+- name: Read k3s kubeconfig content
+  ansible.builtin.command:
+    cmd: cat /etc/rancher/k3s/k3s.yaml
   register: k3s_tools_kubeconfig
-
-- name: Decode k3s kubeconfig content
-  ansible.builtin.set_fact:
-    k3s_tools_kubeconfig_decoded: "{{ k3s_tools_kubeconfig['content'] | b64decode }}"
+  changed_when: false
 
 - name: Display k3s kubeconfig content
   ansible.builtin.debug:
-    var: k3s_tools_kubeconfig_decoded
+    var: k3s_tools_kubeconfig.stdout_lines
