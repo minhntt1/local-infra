@@ -89,6 +89,13 @@
   register: k3s_common_sdb1_part_stat
   when: k3s_common_sdb_disk_stat.stat.exists
 
+- name: Ensure parted is installed
+  ansible.builtin.apt:
+    name: parted
+    state: present
+    update_cache: yes
+  when: k3s_common_sdb_disk_stat.stat.exists
+
 - name: Create a primary partition spanning the entire disk
   community.general.parted:
     device: /dev/sdb
