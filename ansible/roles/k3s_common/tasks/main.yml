@@ -89,10 +89,12 @@
   register: k3s_common_sdb1_part_stat
   when: k3s_common_sdb_disk_stat.stat.exists
 
-- name: Create GPT partition table and single ext4 partition on /dev/sdb
-  ansible.builtin.command:
-    cmd: parted -s /dev/sdb mklabel gpt mkpart primary ext4 0% 100%
-    creates: /dev/sdb1
+- name: Create a primary partition spanning the entire disk
+  community.general.parted:
+    device: /dev/sdb
+    number: 1
+    label: gpt
+    state: present
   when: k3s_common_sdb_disk_stat.stat.exists
 
 - name: Wait for /dev/sdb1 to appear after partitioning
