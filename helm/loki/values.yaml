@@ -19,6 +19,7 @@ loki:
       retention_deletes_enabled: true
       retention_period: 168h
     ingester:
+      wal_dir: /loki/wal
       max_chunk_age: 1h
       chunk_idle_period: 30m
       chunk_retain_period: 1m
