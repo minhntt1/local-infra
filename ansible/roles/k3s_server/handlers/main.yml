@@ -1,0 +1,16 @@
+---
+# handlers/k3s_server/main.yml
+
+- name: Restart local-path-provisioner
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - /etc/rancher/k3s/k3s.yaml
+      - delete
+      - pod
+      - -n
+      - kube-system
+      - -l
+      - app.kubernetes.io/name=local-path-provisioner
+  changed_when: true

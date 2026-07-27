@@ -57,6 +57,48 @@
   changed_when: "'not found' not in k3s_server_taint_result.stderr"
   failed_when: k3s_server_taint_result.rc != 0 and "not found" not in k3s_server_taint_result.stderr
 
+- name: Read current local-path-config
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - /etc/rancher/k3s/k3s.yaml
+      - get
+      - configmap
+      - -n
+      - kube-system
+      - local-path-config
+      - -o
+      - jsonpath={.data.config\.json}
+  register: k3s_server_localpath_current
+  changed_when: false
+
+- name: Build local-path config patch payload
+  ansible.builtin.set_fact:
+    k3s_server_localpath_patch_json: >-
+      {"data":{"config.json":"{\n  \"nodePathMap\":[\n  {\n
+      \"node\":\"DEFAULT_PATH_FOR_NON_LISTED_NODES\",\n
+      \"paths\":[\"/data/k3s\"]\n  }\n  ]\n}"}}
+
+- name: Configure local-path provisioner to use /data/k3s
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - /etc/rancher/k3s/k3s.yaml
+      - patch
+      - configmap
+      - -n
+      - kube-system
+      - local-path-config
+      - --type
+      - merge
+      - '-p'
+      - "{{ k3s_server_localpath_patch_json }}"
+  register: k3s_server_localpath_patch
+  changed_when: "'/data/k3s' not in k3s_server_localpath_current.stdout"
+  notify: Restart local-path-provisioner
+
 - name: Fetch admin kubeconfig to the Ansible controller
   ansible.builtin.fetch:
     src: /etc/rancher/k3s/k3s.yaml
