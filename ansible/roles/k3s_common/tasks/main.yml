@@ -126,7 +126,7 @@
   ansible.builtin.file:
     path: /data
     state: directory
-    mode: "0755"
+    mode: "0777"
 
 - name: Mount data partition at /data using stable by-id path
   ansible.posix.mount:
