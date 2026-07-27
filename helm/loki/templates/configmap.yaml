@@ -32,17 +32,15 @@ data:
       boltdb_shipper:
         active_index_directory: {{ .Values.loki.config.storage_config.boltdb_shipper.active_index_directory }}
         cache_location: {{ .Values.loki.config.storage_config.boltdb_shipper.cache_location }}
-        shared_store: {{ .Values.loki.config.storage_config.boltdb_shipper.shared_store }}
       filesystem:
         directory: /loki/chunks
     compactor:
       working_directory: {{ .Values.loki.config.compactor.working_directory }}
-      shared_store: {{ .Values.loki.config.compactor.shared_store }}
+      delete_request_store: {{ .Values.loki.config.compactor.delete_request_store }}
       retention_enabled: {{ .Values.loki.config.compactor.retention_enabled }}
     table_manager:
       retention_deletes_enabled: {{ .Values.loki.config.table_manager.retention_deletes_enabled }}
       retention_period: {{ .Values.loki.config.table_manager.retention_period }}
     limits_config:
-      enforce_metric_name: false
       reject_old_samples: true
       reject_old_samples_max_age: 168h
