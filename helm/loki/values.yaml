@@ -10,8 +10,27 @@ service:
   port: 3100
 
 persistence:
-  size: 10Gi
+  size: 5Gi
   storageClass: local-path
+
+loki:
+  config:
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 168h
+    ingester:
+      max_chunk_age: 1h
+      chunk_idle_period: 30m
+      chunk_retain_period: 1m
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /loki/index
+        cache_location: /loki/cache
+        shared_store: filesystem
+    compactor:
+      working_directory: /loki/compactor
+      shared_store: filesystem
+      retention_enabled: true
 
 resources:
   limits:

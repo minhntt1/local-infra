@@ -26,9 +26,14 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /loki
+            - name: config
+              mountPath: /etc/loki
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "loki.fullname" . }}-data
+        - name: config
+          configMap:
+            name: {{ include "loki.fullname" . }}-config
