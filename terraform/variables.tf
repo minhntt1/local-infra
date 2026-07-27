@@ -58,6 +58,7 @@ variable "vms" {
     cores   = number
     memory  = number
     disk_gb = number
+    cpu_type = optional(string, "host")
     forwards = list(object({
       protocol      = string
       public_port   = number
