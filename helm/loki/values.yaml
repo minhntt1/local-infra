@@ -26,10 +26,9 @@ loki:
       boltdb_shipper:
         active_index_directory: /loki/index
         cache_location: /loki/cache
-        shared_store: filesystem
     compactor:
       working_directory: /loki/compactor
-      shared_store: filesystem
+      delete_request_store: filesystem
       retention_enabled: true
 
 resources:
