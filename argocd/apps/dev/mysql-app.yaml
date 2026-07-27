@@ -14,8 +14,7 @@ spec:
     namespace: dev
   syncPolicy:
     automated:
-      enabled: false
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
