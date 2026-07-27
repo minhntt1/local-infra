@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "prometheus.fullname" . }}-config
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+
+    rule_files:
+
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+            labels:
+              app: "prometheus"
+
+      - job_name: "mysql_exporter1"
+        static_configs:
+          - targets: ["mysql-exporter.dev.svc:9104"]
+            labels:
+              app: "mysql_exporter1"
+
+      - job_name: "network-statistics-executor"
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ["network-statistic1.dev.svc:8080"]
+            labels:
+              app: "network_statistic1"

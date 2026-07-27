@@ -1,8 +1,8 @@
-{{- define "local-infra-prod.name" -}}
+{{- define "loki.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "local-infra-prod.fullname" -}}
+{{- define "loki.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,16 +15,16 @@
 {{- end }}
 {{- end }}
 
-{{- define "local-infra-prod.labels" -}}
-helm.sh/chart: {{ include "local-infra-prod.name" . }}-{{ .Chart.Version | replace "+" "_" }}
-{{ include "local-infra-prod.selectorLabels" . }}
+{{- define "loki.labels" -}}
+helm.sh/chart: {{ include "loki.name" . }}-{{ .Chart.Version | replace "+" "_" }}
+{{ include "loki.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "local-infra-prod.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "local-infra-prod.name" . }}
+{{- define "loki.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "loki.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

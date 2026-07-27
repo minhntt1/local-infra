@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fluentbit.fullname" . }}-config
+  labels:
+    {{- include "fluentbit.labels" . | nindent 4 }}
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        5
+        Daemon       Off
+        Parsers_File parsers.conf
+        Log_Level    info
+
+    [INPUT]
+        Name              tail
+        Path              /logging/network-statistics-log1/executor.log
+        Parser            spring
+        Tag               net-statistic-executor
+        Refresh_Interval  5
+        Skip_Long_Lines   Off
+
+    [OUTPUT]
+        Name              loki
+        Match             net-statistic-executor
+        Host              {{ .Values.loki.host }}
+        Port              {{ .Values.loki.port }}
+        Labels            job=fluentbit,app=net-statistic-executor,env=prd
+  parsers.conf: |
+    [PARSER]
+        Name        spring
+        Format      regex
+        Regex       ^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}) +(?<level>[A-Z]+) +\[(?<thread>[^\]]+)\] +(?<logger>[^ ]+) - (?<message>.*)$
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+        Time_Offset +0000

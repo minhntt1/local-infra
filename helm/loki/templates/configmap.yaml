@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "loki.fullname" . }}-config
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+data:
+  loki-config.yaml: |
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+    ingester:
+      lifecycler:
+        address: 127.0.0.1
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+      max_chunk_age: {{ .Values.loki.config.ingester.max_chunk_age }}
+      chunk_idle_period: {{ .Values.loki.config.ingester.chunk_idle_period }}
+      chunk_retain_period: {{ .Values.loki.config.ingester.chunk_retain_period }}
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: {{ .Values.loki.config.storage_config.boltdb_shipper.active_index_directory }}
+        cache_location: {{ .Values.loki.config.storage_config.boltdb_shipper.cache_location }}
+        shared_store: {{ .Values.loki.config.storage_config.boltdb_shipper.shared_store }}
+      filesystem:
+        directory: /loki/chunks
+    compactor:
+      working_directory: {{ .Values.loki.config.compactor.working_directory }}
+      shared_store: {{ .Values.loki.config.compactor.shared_store }}
+      retention_enabled: {{ .Values.loki.config.compactor.retention_enabled }}
+    table_manager:
+      retention_deletes_enabled: {{ .Values.loki.config.table_manager.retention_deletes_enabled }}
+      retention_period: {{ .Values.loki.config.table_manager.retention_period }}
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h

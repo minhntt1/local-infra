@@ -1,8 +1,8 @@
-{{- define "local-infra-dev.name" -}}
+{{- define "prometheus.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "local-infra-dev.fullname" -}}
+{{- define "prometheus.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,16 +15,16 @@
 {{- end }}
 {{- end }}
 
-{{- define "local-infra-dev.labels" -}}
-helm.sh/chart: {{ include "local-infra-dev.name" . }}-{{ .Chart.Version | replace "+" "_" }}
-{{ include "local-infra-dev.selectorLabels" . }}
+{{- define "prometheus.labels" -}}
+helm.sh/chart: {{ include "prometheus.name" . }}-{{ .Chart.Version | replace "+" "_" }}
+{{ include "prometheus.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "local-infra-dev.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "local-infra-dev.name" . }}
+{{- define "prometheus.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "prometheus.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
