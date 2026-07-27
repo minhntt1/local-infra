@@ -72,50 +72,55 @@
       - lsb-release
     state: present
 
-# --- data disk (sdb) setup ---
-# The prod VM has a 20G secondary disk on data-hdd (scsi1, /dev/sdb).
+# --- data disk (scsi1) setup ---
+# The prod VM has a 20G secondary disk on data-hdd (scsi1).
+# Referenced by stable /dev/disk/by-id/ symlink so it survives reboots
+# regardless of which /dev/sdX the kernel assigns.
 # Partition (GPT single ext4 partition), format, and mount to /data.
 # All tasks are idempotent: they detect existing state and skip if done.
 # On re-runs, only the mount and /data/k3s directory are re-checked.
 
-- name: Check if /dev/sdb secondary disk exists
+- name: Check for data-hdd disk by stable symlink
   ansible.builtin.stat:
-    path: /dev/sdb
-  register: k3s_common_sdb_disk_stat
+    path: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
+  register: k3s_common_data_disk_stat
 
-- name: Check if /dev/sdb1 partition already exists
+- name: Set data disk device paths
+  ansible.builtin.set_fact:
+    k3s_common_data_dev: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
+    k3s_common_data_part: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1-part1
+
+- name: Check if data disk partition already exists
   ansible.builtin.stat:
-    path: /dev/sdb1
-  register: k3s_common_sdb1_part_stat
-  when: k3s_common_sdb_disk_stat.stat.exists
+    path: "{{ k3s_common_data_part }}"
+  register: k3s_common_data_part_stat
+  when: k3s_common_data_disk_stat.stat.exists
 
 - name: Ensure parted is installed
   ansible.builtin.apt:
     name: parted
     state: present
     update_cache: true
-  when: k3s_common_sdb_disk_stat.stat.exists
+  when: k3s_common_data_disk_stat.stat.exists
 
-- name: Create a primary partition spanning the entire disk
+- name: Create a primary partition spanning the entire data disk
   community.general.parted:
-    device: /dev/sdb
+    device: "{{ k3s_common_data_dev }}"
     number: 1
     label: gpt
     state: present
-  when: k3s_common_sdb_disk_stat.stat.exists
+  when: k3s_common_data_disk_stat.stat.exists and not (k3s_common_data_part_stat.stat.exists | default(false))
 
-- name: Wait for /dev/sdb1 to appear after partitioning
+- name: Wait for partition to appear
   ansible.builtin.wait_for:
-    path: /dev/sdb1
+    path: "{{ k3s_common_data_part }}"
     timeout: 10
-  when:
-    - k3s_common_sdb_disk_stat.stat.exists
-    - not (k3s_common_sdb1_part_stat.stat.exists | default(false))
+  when: k3s_common_data_disk_stat.stat.exists and not (k3s_common_data_part_stat.stat.exists | default(false))
 
-- name: Format /dev/sdb1 as ext4 (no-op if already formatted)
+- name: Format data partition as ext4 (no-op if already formatted)
   community.general.filesystem:
     fstype: ext4
-    dev: /dev/sdb1
+    dev: "{{ k3s_common_data_part }}"
 
 - name: Create /data mount point
   ansible.builtin.file:
@@ -123,10 +128,10 @@
     state: directory
     mode: "0755"
 
-- name: Mount /dev/sdb1 at /data (idempotent, checks fstab and mount state)
+- name: Mount data partition at /data using stable by-id path
   ansible.posix.mount:
     path: /data
-    src: /dev/sdb1
+    src: "{{ k3s_common_data_part }}"
     fstype: ext4
     opts: defaults,noatime
     state: mounted
