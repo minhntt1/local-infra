@@ -7,7 +7,22 @@ metadata:
 data:
   my.cnf: |
     [mysqld]
-    character-set-server=utf8mb4
-    collation-server=utf8mb4_unicode_ci
+    host-cache-size=0
+    skip-name-resolve
+    datadir=/var/lib/mysql
+    socket=/var/run/mysqld/mysqld.sock
+    secure-file-priv=/var/lib/mysql-files
+    user=mysql
+
+    # reduce disk flush
+    innodb_flush_log_at_trx_commit=2
+
+    # InnoDB uses O_SYNC (os sync) to open and flush the log files, and fsync() to flush the data files
+    innodb_flush_method=fsync
+
+    # increase no of concurrent connections
+    max_connections=1000
+
+    pid-file=/var/run/mysqld/mysqld.pid
     [client]
-    default-character-set=utf8mb4
+    socket=/var/run/mysqld/mysqld.sock
