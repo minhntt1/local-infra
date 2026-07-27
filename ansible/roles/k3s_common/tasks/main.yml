@@ -135,7 +135,7 @@
   ansible.builtin.file:
     path: /data/k3s
     state: directory
-    mode: "0755"
+    mode: "0777"
 
 # Resolve the node IP for the kubeconfig rewrite. `cluster_interface`
 # (default "eth0") is the guest NIC name inside the VM, not the Proxmox
