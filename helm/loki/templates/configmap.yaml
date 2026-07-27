@@ -9,6 +9,8 @@ data:
     auth_enabled: false
     server:
       http_listen_port: 3100
+    wal:
+      dir: {{ .Values.loki.config.wal.dir }}
     ingester:
       lifecycler:
         address: 127.0.0.1
@@ -16,7 +18,6 @@ data:
           kvstore:
             store: inmemory
           replication_factor: 1
-      wal_dir: {{ .Values.loki.config.ingester.wal_dir }}
       max_chunk_age: {{ .Values.loki.config.ingester.max_chunk_age }}
       chunk_idle_period: {{ .Values.loki.config.ingester.chunk_idle_period }}
       chunk_retain_period: {{ .Values.loki.config.ingester.chunk_retain_period }}
