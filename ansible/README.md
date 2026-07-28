@@ -24,7 +24,7 @@ The design goal is that **adding a new service is just adding a role + a playboo
 
 ## Inventory strategy
 
-VMs receive **DHCP addresses** on the Proxmox bridge `vnet1` (10.10.0.0/24), so static IPs in inventory would drift. Instead Ansible uses a **Proxmox dynamic inventory** (`inventory/proxmox.yml`) that:
+VMs receive **DHCP addresses** on the Proxmox bridge `vnet1` (10.10.0.0/16), so static IPs in inventory would drift. Instead Ansible uses a **Proxmox dynamic inventory** (`inventory/proxmox.yml`) that:
 
 1. Authenticates to the Proxmox API with the same `admin@pve!terraform` token Terraform uses (supplied via env vars, never committed).
 2. Reads each VM's current IPv4 from the QEMU guest agent (enabled in `terraform/main.tf`).
@@ -117,7 +117,7 @@ Re-running the playbook is idempotent: install steps use `creates:` guards and s
 The k3s installation uses the following network configuration:
 - **Pod CIDR**: `10.42.0.0/16` (flannel VXLAN for pod-to-pod communication)
 - **Service CIDR**: `10.43.0.0/16` (ClusterIP virtual IPs for Services)
-- Both ranges are chosen to not conflict with the Proxmox bridge `vnet1` (`10.10.0.0/24`)
+- Both ranges are chosen to not conflict with the Proxmox bridge `vnet1` (`10.10.0.0/16`)
 
 ### DHCP Resilience
 Since the prod VM gets its IP via DHCP on the Proxmox bridge `vnet1`:
