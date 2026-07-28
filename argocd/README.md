@@ -4,29 +4,23 @@
 
 ArgoCD uses the **App of Apps** pattern to manage workloads declaratively. A single root Application (`apps`) watches the `argocd/apps/` directory in the repo and creates child Applications based on the YAML manifests found there.
 
+## App Overview
+
 ```mermaid
 flowchart LR
-    ROOT["Root App: apps\nargocd/apps/ (main branch)"]
+    ROOT["Root App: apps\nargocd/apps/"] --> DEV["Child App: dev\nargocd/apps/dev/\nNamespace: dev"]
+    ROOT --> MON["Child App: monitoring\nargocd/apps/monitoring/\nNamespace: monitoring"]
+
+    DEV --> MYSQL["Helm Chart: mysql\nhelm/mysql/"]
+    MON --> FB["Helm Chart: fluentbit\nhelm/fluentbit/"]
+    MON --> LOKI["Helm Chart: loki\nhelm/loki/"]
+    MON --> PROM["Helm Chart: prometheus\nhelm/prometheus/"]
 ```
 
-## Repository Layout
-
-```
-local-infra/
-├── argocd/
-│   └── apps/
-│       ├── dev/
-│       │   └── mysql-dev-app.yaml
-│       └── monitoring/
-│           ├── fluentbit-app.yaml
-│           ├── loki-app.yaml
-│           └── prometheus-app.yaml
-├── helm/
-│   ├── fluentbit/
-│   ├── loki/
-│   ├── mysql/
-│   └── prometheus/
-```
+| Child App | ArgoCD Path | Namespace | Helm Chart Source |
+|-----------|-------------|-----------|-------------------|
+| `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/` |
+| `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/` |
 
 ## Applications
 
