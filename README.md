@@ -43,7 +43,7 @@ flowchart TB
         end
 
         subgraph HOST["Proxmox Host — iptables NAT"]
-            DNAT["DNAT rules\nvmbr0:8080 → prod:8080\n(add on post-start,\nremove on pre-stop)"]
+            DNAT["DNAT rules\nvmbr0:8080 → prod:30808\n(add on post-start,\nremove on pre-stop)"]
         end
     end
 
