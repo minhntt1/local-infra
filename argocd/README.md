@@ -15,21 +15,17 @@ flowchart LR
 local-infra/
 ├── argocd/
 │   └── apps/
-│       ├── dev-app.yaml      # Application CRD for dev
-│       └── prod-app.yaml     # Application CRD for prod
+│       ├── dev/
+│       │   └── mysql-dev-app.yaml
+│       └── monitoring/
+│           ├── fluentbit-app.yaml
+│           ├── loki-app.yaml
+│           └── prometheus-app.yaml
 ├── helm/
-│   ├── dev/                  # Helm chart deployed to dev namespace
-│   │   ├── Chart.yaml
-│   │   ├── values.yaml
-│   │   └── templates/
-│   │       ├── deployment.yaml
-│   │       └── service.yaml
-│   └── prod/                 # Helm chart deployed to prod namespace
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
-│           ├── deployment.yaml
-│           └── service.yaml
+│   ├── fluentbit/
+│   ├── loki/
+│   ├── mysql/
+│   └── prometheus/
 ```
 
 ## Applications
