@@ -34,7 +34,7 @@ flowchart TB
             HOOK_PROD["nat-hook-prod.sh\n(rendered from template)"]
         end
 
-        subgraph VMS["Managed VMs (bridge vnet1, 10.10.0.0/24)"]
+        subgraph VMS["Managed VMs (bridge vnet1, 10.10.0.0/16)"]
             subgraph PROD["prod (VMID 200) — vnet1 -> eth0 (virtio) 10.10.0.5"]
                 POD_NET["pod CIDR: 10.42.0.0/16\n(flannel VXLAN)"]
                 SVC_NET["service CIDR: 10.43.0.0/16\n(ClusterIP virtual)"]

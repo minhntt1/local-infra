@@ -17,7 +17,7 @@ k3s_token: "CHANGE_ME_TO_A_RANDOM_TOKEN"
 # The resolved IP from this interface is only used to rewrite the fetched
 # kubeconfig so the runner can reach the cluster via kubectl.
 # The prod VM gets its DHCP address on this interface (bridged onto the
-# Proxmox `vnet1` bridge, 10.10.0.0/24).
+# Proxmox `vnet1` bridge, 10.10.0.0/16).
 # The k3s_common role resolves the node IP from this interface when present
 # in facts, and falls back to ansible_default_ipv4 otherwise.
 cluster_interface: "eth0"
