@@ -1,6 +1,6 @@
 # Monitoring Stack
 
-An observability layer runs in the `monitoring` namespace, deployed as three independent ArgoCD Applications (each in `argocd/apps/monitoring/`, all with automated sync + prune + selfHeal and `CreateNamespace=true`):
+An observability layer runs in the `monitoring` namespace, deployed as three independent ArgoCD Applications (each in `argocd/apps/monitoring/`, all with automated sync + prune without selfHeal and `CreateNamespace=true`):
 
 | Component | ArgoCD App | Helm chart | Image | Notes |
 |-----------|------------|------------|-------|-------|

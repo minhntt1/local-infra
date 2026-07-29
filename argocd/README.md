@@ -26,7 +26,7 @@ flowchart LR
 
 | App | Branch | Path | Namespace | Sync Policy |
 |-----|--------|------|-----------|-------------|
-| `apps` (root) | `main` | `argocd/apps/` (recursive) | `argocd` | Automated + Prune + SelfHeal |
+| `apps` (root) | `main` | `argocd/apps/` (recursive) | `argocd` | Automated + Prune |
 
 ## Status (verified via ArgoCD CLI)
 
@@ -44,6 +44,6 @@ flowchart LR
 **Key observations:**
 - ArgoCD is operational and accessible on the prod k3s cluster (`10.10.0.5:30808`)
 - The `local-infra` git repo is connected and fetching successfully
-- All applications use automated sync with prune and self-heal enabled
+- All applications use automated sync with prune, but self-heal is disabled
 
 > **✅ Resolved (2026-07-27):** A second, full ArgoCD install was previously running in the **`default`** namespace (7 `argocd-*` pods, image `v3.4.5`, ClusterIP only — no nodePort, so it never bound host port 30808). It was unmanaged (no Helm release, no Application CR, empty config) and redundant vs the intended Helm-managed install in the `argocd` namespace. It has been **deleted** (all workloads, services, RBAC in `default`, plus cluster-wide `argocd-*` ClusterRoles/Bindings). The intended `argocd`-ns instance (image `v3.1.0`) remains and still serves port 30808.
