@@ -1,4 +1,4 @@
-replicaCount: 0
+replicaCount: 1
 image:
   repository: grafana/grafana-enterprise
   tag: 13.0.1
