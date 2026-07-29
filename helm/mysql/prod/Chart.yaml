@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mysql-prod
+description: MySQL 8.4 for prod namespace
+type: application
+version: 0.1.0
+appVersion: "8.4.6"

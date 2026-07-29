@@ -1,0 +1,20 @@
+replicaCount: 0
+image:
+  repository: grafana/grafana-enterprise
+  tag: 13.0.1
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 3000
+persistence:
+  size: 10Gi
+  storageClass: local-path
+admin:
+  password: <SET_ME>
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
