@@ -1,0 +1,28 @@
+replicaCount: 0
+
+image:
+  repository: mysql
+  tag: 8.4.6
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3306
+
+persistence:
+  size: 10Gi
+  storageClass: local-path
+
+mysql:
+  rootPassword: <SET_ME>
+  database: <SET_ME>
+  user: <SET_ME>
+  password: <SET_ME>
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mysql-exporter-prod.fullname" . }}
+  labels:
+    {{- include "mysql-exporter-prod.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mysql-exporter-prod.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mysql-exporter-prod.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: mysql-exporter-prod
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config.my-cnf=/cfg/.my.cnf
+            - --mysqld.address={{ .Values.mysql.host }}:{{ .Values.mysql.port }}
+          ports:
+            - containerPort: 9104
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /cfg
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ include "mysql-exporter-prod.fullname" . }}-config

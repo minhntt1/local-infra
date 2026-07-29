@@ -10,23 +10,35 @@ ArgoCD uses the **App of Apps** pattern to manage workloads declaratively. A sin
 flowchart LR
     ROOT["Root App: apps\nargocd/apps/"] --> DEV["Child App: dev\nargocd/apps/dev/\nNamespace: dev"]
     ROOT --> MON["Child App: monitoring\nargocd/apps/monitoring/\nNamespace: monitoring"]
+    ROOT --> PROD["Child App: prod\nargocd/apps/prod/\nNamespace: prod"]
 
     DEV --> MYSQL["Helm Chart: mysql/dev\nhelm/mysql/dev/"]
     MON --> FB["Helm Chart: fluentbit\nhelm/fluentbit/"]
     MON --> LOKI["Helm Chart: loki\nhelm/loki/"]
     MON --> PROM["Helm Chart: prometheus\nhelm/prometheus/"]
+    PROD --> MYSQL_PROD["Helm Chart: mysql/prod\nhelm/mysql/prod/"]
+    PROD --> MYSQL_EXPORTER["Helm Chart: mysql-exporter-prod\nhelm/mysql-exporter/prod/"]
+    MON --> GRAFANA["Helm Chart: grafana\nhelm/grafana/"]
 ```
 
 | Child App | ArgoCD Path | Namespace | Helm Chart Source |
 |-----------|-------------|-----------|-------------------|
 | `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/dev/` |
-| `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/` |
+| `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/`, `helm/grafana/` |
+| `prod` | `argocd/apps/prod/` | `prod` | `helm/mysql/prod/`, `helm/mysql-exporter/prod/` |
 
 ## Applications
 
 | App | Branch | Path | Namespace | Sync Policy |
 |-----|--------|------|-----------|-------------|
 | `apps` (root) | `main` | `argocd/apps/` (recursive) | `argocd` | Automated + Prune |
+| `mysql-dev` | `main` | `argocd/apps/dev/` | `dev` | Automated + Prune |
+| `fluentbit` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
+| `loki` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
+| `prometheus` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
+| `grafana` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
+| `mysql-prod` | `main` | `argocd/apps/prod/` | `prod` | Automated + Prune |
+| `mysql-exporter-prod` | `main` | `argocd/apps/prod/` | `prod` | Automated + Prune |
 
 ## Status (verified via ArgoCD CLI)
 
@@ -36,7 +48,7 @@ flowchart LR
 | **ArgoCD Server Version** | `v3.1.0` (Kustomize v5.7.0, Helm v3.18.4, Kubectl v0.33.1) |
 | **ArgoCD CLI Version** | `v3.4.5` |
 | **Authentication** | Logged in as `admin` via `admin` issuer |
-| **Applications** | **1** — `apps` (root) — **Synced** and **Healthy** |
+| **Applications** | **2** — `apps` (root), `mysql-prod`, `mysql-exporter-prod`, `grafana` — **not yet synced** (pending Helm chart creation) |
 | **Clusters** | **1** — `in-cluster` (`https://kubernetes.default.svc`) |
 | **Repositories** | **1** — `local-infra` (`https://github.com/minhntt1/local-infra`) — **Successful** |
 | **Projects** | **1** — `default` (wildcard destinations/sources, orphaned resources disabled) |

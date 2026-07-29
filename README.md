@@ -96,11 +96,15 @@ local-infra/
 │       ├── k3s_tools/         # Install Helm CLI and ArgoCD after k3s
 │       └── k3s_agent/         # Join workers to the server (no-op while empty)
 ├── argocd/                    # ArgoCD App of Apps definitions
-│   └── apps/                  # Child Application CRDs (dev, prod)
+│   └── apps/                  # Child Application CRDs (dev, monitoring, prod)
 ├── helm/                      # Helm charts for lab services
 │   ├── fluentbit/             # Fluent Bit log shipper
+│   ├── grafana/               # Grafana Enterprise dashboard
 │   ├── loki/                  # Loki log storage
-│   ├── mysql/                 # MySQL
+│   ├── mysql/                 # MySQL (dev + prod)
+│   │   ├── dev/
+│   │   └── prod/
+│   ├── mysql-exporter/prod/     # Prometheus mysqld-exporter
 │   └── prometheus/            # Prometheus metrics
 └── terraform/                 # Proxmox VM provisioning
     ├── backend.tf             # Remote state config

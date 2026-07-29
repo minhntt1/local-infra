@@ -1,0 +1,6 @@
+apiVersion: v2
+name: grafana
+description: Grafana Enterprise for monitoring namespace
+type: application
+version: 0.1.0
+appVersion: "13.0.1"
