@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/minhntt1/local-infra
     targetRevision: main
-    path: argocd/infra
+    path: argocd/infra/traefik
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
