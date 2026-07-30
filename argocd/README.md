@@ -8,10 +8,12 @@ ArgoCD uses the **App of Apps** pattern to manage workloads declaratively. A sin
 
 ```mermaid
 flowchart LR
-    ROOT["Root App: apps\nargocd/apps/"] --> DEV["Child App: dev\nargocd/apps/dev/\nNamespace: dev"]
+    ROOT["Root App: apps\nargocd/apps/"] --> INFRA["Child App: infra\nargocd/apps/infra/\nNamespace: kube-system"]
+    ROOT --> DEV["Child App: dev\nargocd/apps/dev/\nNamespace: dev"]
     ROOT --> MON["Child App: monitoring\nargocd/apps/monitoring/\nNamespace: monitoring"]
     ROOT --> PROD["Child App: prod\nargocd/apps/prod/\nNamespace: prod"]
 
+    INFRA --> TRAEFIK_CFG["HelmChartConfig: traefik\nargocd/infra/traefik/\nNamespace: kube-system"]
     DEV --> MYSQL["Helm Chart: mysql/dev\nhelm/mysql/dev/"]
     MON --> FB["Helm Chart: fluentbit\nhelm/fluentbit/"]
     MON --> LOKI["Helm Chart: loki\nhelm/loki/"]
@@ -23,6 +25,7 @@ flowchart LR
 
 | Child App | ArgoCD Path | Namespace | Helm Chart Source |
 |-----------|-------------|-----------|-------------------|
+| `infra` | `argocd/apps/infra/` | `kube-system` | `argocd/infra/traefik/` (HelmChartConfig) |
 | `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/dev/` |
 | `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/`, `helm/grafana/` |
 | `prod` | `argocd/apps/prod/` | `prod` | `helm/mysql/prod/`, `helm/mysql-exporter/prod/` |
@@ -32,6 +35,8 @@ flowchart LR
 | App | Branch | Path | Namespace | Sync Policy |
 |-----|--------|------|-----------|-------------|
 | `apps` (root) | `main` | `argocd/apps/` (recursive) | `argocd` | Automated + Prune |
+| `infra` | `main` | `argocd/apps/infra/` | `argocd` | Automated + Prune |
+| `traefik-config` | `main` | `argocd/apps/infra/` | `kube-system` | Automated + Prune |
 | `mysql-dev` | `main` | `argocd/apps/dev/` | `dev` | Automated + Prune |
 | `fluentbit` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
 | `loki` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |

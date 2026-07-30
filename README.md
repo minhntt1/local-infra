@@ -96,7 +96,8 @@ local-infra/
 │       ├── k3s_tools/         # Install Helm CLI and ArgoCD after k3s
 │       └── k3s_agent/         # Join workers to the server (no-op while empty)
 ├── argocd/                    # ArgoCD App of Apps definitions
-│   └── apps/                  # Child Application CRDs (dev, monitoring, prod)
+│   ├── apps/                  # Child Application CRDs (infra, dev, monitoring, prod)
+│   └── infra/                 # Infrastructure configs (traefik HelmChartConfig)
 ├── helm/                      # Helm charts for lab services
 │   ├── fluentbit/             # Fluent Bit log shipper
 │   ├── grafana/               # Grafana Enterprise dashboard
