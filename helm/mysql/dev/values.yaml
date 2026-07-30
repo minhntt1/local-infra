@@ -26,3 +26,6 @@ resources:
   requests:
     cpu: 200m
     memory: 512Mi
+
+ingressRouteTCP:
+  enabled: true
