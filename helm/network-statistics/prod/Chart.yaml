@@ -1,0 +1,6 @@
+apiVersion: v2
+name: network-statistics-prod
+description: Network Statistics app for prod namespace
+type: application
+version: 0.1.0
+appVersion: "0.0.1-SNAPSHOT"

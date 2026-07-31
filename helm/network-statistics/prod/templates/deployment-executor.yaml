@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "network-statistics-prod.fullname" . }}-executor
+  labels:
+    {{- include "network-statistics-prod.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "network-statistics-prod.selectorLabels" . | nindent 6 }}
+      role: executor
+  template:
+    metadata:
+      labels:
+        {{- include "network-statistics-prod.selectorLabels" . | nindent 8 }}
+        role: executor
+    spec:
+      {{- if .Values.imagePullSecret.enabled }}
+      imagePullSecrets:
+        - name: {{ include "network-statistics-prod.fullname" . }}-ghcr-secret
+      {{- end }}
+      containers:
+        - name: executor
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.executorPort }}
+              protocol: TCP
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prd-executor
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: /app/config/
+            - name: LOGGING_FILE_NAME
+              value: /logging/network-statistics-log1/executor.log
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: logging
+              mountPath: /logging
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "network-statistics-prod.fullname" . }}-config
+        {{- if eq .Values.logging.volume.type "emptyDir" }}
+        - name: logging
+          emptyDir: {}
+        {{- else if eq .Values.logging.volume.type "hostPath" }}
+        - name: logging
+          hostPath:
+            path: /logging/network-statistics-log1
+        {{- else }}
+        - name: logging
+          persistentVolumeClaim:
+            claimName: {{ include "network-statistics-prod.fullname" . }}-logging-pvc
+        {{- end }}

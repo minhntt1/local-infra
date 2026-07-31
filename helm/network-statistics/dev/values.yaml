@@ -1,0 +1,47 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/minhntt1/network-statistics
+  tag: abc1234
+  pullPolicy: IfNotPresent
+
+imagePullSecret:
+  enabled: true
+  registry: ghcr.io
+  username: minhntt1
+  password: abc123
+
+service:
+  type: ClusterIP
+  executorPort: 8080
+  adminPort: 8081
+
+persistence:
+  enabled: false
+  size: 1Gi
+  storageClass: local-path
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+database:
+  host: mysql-dev.dev.svc
+  port: 3306
+  quartzDatabase: quartz
+  quartzUsername: dev
+  quartzPassword: abc123
+  statisticDatabase: network_statistics
+  statisticUsername: dev
+  statisticPassword: abc123
+
+ingressRoute:
+  enabled: true
+
+logging:
+  volume:
+    type: emptyDir

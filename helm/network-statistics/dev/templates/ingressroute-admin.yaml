@@ -1,0 +1,17 @@
+{{- if .Values.ingressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "network-statistics-dev.fullname" . }}-admin
+  labels:
+    {{- include "network-statistics-dev.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: PathPrefix(`/network-statistics`)
+      kind: Rule
+      services:
+        - name: {{ include "network-statistics-dev.fullname" . }}-admin
+          port: {{ .Values.service.adminPort }}
+{{- end }}
