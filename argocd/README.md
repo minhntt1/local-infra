@@ -49,27 +49,21 @@ flowchart LR
 
 ## Secrets Management (Sealed Secrets)
 
-The [Sealed Secrets](https://github.com/bitnami/sealed-secrets) controller runs in `kube-system`, deployed by the `sealed-secrets` ArgoCD app from `argocd/apps/infra/sealed-secrets-app.yaml` (bitnami chart `2.19.1`, `fullnameOverride=sealed-secrets-controller` so `kubeseal` works without extra flags). It lets us commit encrypted `Secret` data to git safely — only the controller can decrypt it.
+The Sealed Secrets controller runs in `kube-system`, deployed by the `sealed-secrets` ArgoCD app (bitnami chart `2.19.1`, `fullnameOverride=sealed-secrets-controller`). It decrypts `SealedSecret` resources in-cluster so encrypted secrets are safe to commit to git.
 
-**Rule:** Never commit raw credentials (GitHub PATs, DB passwords) to this repo — **not even base64-encoded**. GitHub push protection decodes base64 and blocks `ghp_…` tokens. Use Sealed Secrets (in-cluster) or GitHub Actions secrets (CI) instead.
+Use the **`seal-secret`** skill to seal any Kubernetes `Secret` into a `SealedSecret`:
+```bash
+seal.sh <namespace> <secret-name> <secret-manifest-json> [output-file]
+```
+The `seal.sh` script has `KUBECONFIG` built in and auto-fetches the controller public cert; sealing itself is local encryption — no plaintext touches the cluster.
 
-**Workflow to add/update a secret:**
-1. Install `kubeseal` locally.
-2. Build a normal `Secret` and pipe it through `kubeseal` to produce a `SealedSecret`:
-   ```bash
-   kubectl -n <namespace> create secret docker-registry <name> \
-     --docker-server=ghcr.io --docker-username=minhntt1 \
-     --docker-password=<PAT> --dry-run=client -o json \
-     | kubeseal -n <namespace> --name <name> -o yaml > sealedsecret-<name>.yaml
-   ```
-3. Commit the generated `sealedsecret-*.yaml`. The controller decrypts it in-cluster into the `Secret` of the same name/namespace.
+**Hard rules:**
+- **NEVER commit raw credentials**, not even base64-encoded — GitHub push protection decodes base64 and blocks tokens.
+- GitHub Actions secrets (e.g. `LOCAL_INFRA_PAT`) stay in GitHub's store, never in this repo.
 
-**Convention for network-statistics:** the charts expect Secrets produced by SealedSecrets (the charts set `imagePullSecret.enabled: false` and reference the secret directly):
-- `dockerconfigjson` pull secret named after the chart fullname — `<chart-fullname>-ghcr-secret` in `dev` / `prod` (the `<chart-fullname>` equals the ArgoCD Application/release name, e.g. `netstat-statistics-dev-ghcr-secret`).
-- DB passwords in a generic secret `<chart-fullname>-db-secret` with keys `quartz-scheduler-password` and `statistic-db-password`.
-  > The chart's `ConfigMap` currently embeds the DB password (decoded from a base64 value in `values.yaml`). For proper isolation, move to `env: valueFrom: secretKeyRef` against this Sealed Secret instead.
-
-**GitHub Actions secrets** (e.g. `LOCAL_INFRA_PAT` on the `netstat-statistics` repo) live in GitHub's secret store and are never committed to this repo.
+**network-statistics convention** (charts set `imagePullSecret.enabled: false`):
+- `network-statistics-{dev,prod}-ghcr-secret` — `kubernetes.io/dockerconfigjson` pull secret.
+- `network-statistics-{dev,prod}-db-secret` — Opaque, keys `quartz-scheduler-password` / `statistic-db-password`.
 
 ## Status (verified via ArgoCD CLI)
 
