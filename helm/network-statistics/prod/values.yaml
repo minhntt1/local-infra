@@ -6,10 +6,9 @@ image:
   pullPolicy: IfNotPresent
 
 imagePullSecret:
-  enabled: false  # GHCR pull secret created out-of-band in the cluster (kubectl); not stored in git (GitHub push protection blocks it)
+  enabled: false  # managed by SealedSecret; not stored in git
   registry: ghcr.io
   username: minhntt1
-  password: PFNFVF9NRQ==  # TODO: replace out-of-band; base64("<SET_ME>") placeholder only
 
 service:
   type: ClusterIP
@@ -35,10 +34,8 @@ database:
   port: 3306
   quartzDatabase: quartz
   quartzUsername: quartz
-  quartzPassword: U0VUX01F  # TODO: replace with base64 of real DB password
   statisticDatabase: network_statistics
   statisticUsername: netstats
-  statisticPassword: U0VUX01F  # TODO: replace with base64 of real DB password
 
 ingressRoute:
   enabled: true
