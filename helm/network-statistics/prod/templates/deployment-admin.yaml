@@ -29,14 +29,23 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prd-admin
-            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
-              value: /app/config/
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
+            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_JDBCURL
+              value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.quartzDatabase }}?connectionTimeZone=UTC"
+            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_USERNAME
+              value: "{{ .Values.database.quartzUsername }}"
+            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "network-statistics-prod.fullname" . }}-db-secret
+                  key: quartz-scheduler-password
+            - name: SPRING_DATASOURCE_STATISTIC_DB_JDBCURL
+              value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.statisticDatabase }}?connectionTimeZone=UTC"
+            - name: SPRING_DATASOURCE_STATISTIC_DB_USERNAME
+              value: "{{ .Values.database.statisticUsername }}"
+            - name: SPRING_DATASOURCE_STATISTIC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "network-statistics-prod.fullname" . }}-db-secret
+                  key: statistic-db-password
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        - name: config
-          configMap:
-            name: {{ include "network-statistics-prod.fullname" . }}-config
