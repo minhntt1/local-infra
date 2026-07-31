@@ -14,6 +14,7 @@ flowchart LR
     ROOT --> PROD["Child App: prod\nargocd/apps/prod/\nNamespace: prod"]
 
     INFRA --> TRAEFIK_CFG["HelmChartConfig: traefik\nargocd/infra/traefik/\nNamespace: kube-system"]
+    INFRA --> SEALED["App: sealed-secrets\nargocd/apps/infra/\nNamespace: kube-system (bitnami chart)"]
     DEV --> MYSQL["Helm Chart: mysql/dev\nhelm/mysql/dev/"]
     MON --> FB["Helm Chart: fluentbit\nhelm/fluentbit/"]
     MON --> LOKI["Helm Chart: loki\nhelm/loki/"]
@@ -25,7 +26,7 @@ flowchart LR
 
 | Child App | ArgoCD Path | Namespace | Helm Chart Source |
 |-----------|-------------|-----------|-------------------|
-| `infra` | `argocd/apps/infra/` | `kube-system` | `argocd/infra/traefik/` (HelmChartConfig) |
+| `infra` | `argocd/apps/infra/` | `kube-system` | `argocd/infra/traefik/` (HelmChartConfig), `sealed-secrets-app.yaml` (bitnami Helm chart) |
 | `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/dev/` |
 | `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/`, `helm/grafana/` |
 | `prod` | `argocd/apps/prod/` | `prod` | `helm/mysql/prod/`, `helm/mysql-exporter/prod/` |
@@ -37,6 +38,7 @@ flowchart LR
 | `apps` (root) | `main` | `argocd/apps/` (recursive) | `argocd` | Automated + Prune |
 | `infra` | `main` | `argocd/apps/infra/` | `argocd` | Automated + Prune |
 | `traefik-config` | `main` | `argocd/apps/infra/` | `kube-system` | Automated + Prune |
+| `sealed-secrets` | `main` | `argocd/apps/infra/` | `kube-system` | Automated + Prune |
 | `mysql-dev` | `main` | `argocd/apps/dev/` | `dev` | Automated + Prune |
 | `fluentbit` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
 | `loki` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
@@ -44,6 +46,30 @@ flowchart LR
 | `grafana` | `main` | `argocd/apps/monitoring/` | `monitoring` | Automated + Prune |
 | `mysql-prod` | `main` | `argocd/apps/prod/` | `prod` | Automated + Prune |
 | `mysql-exporter-prod` | `main` | `argocd/apps/prod/` | `prod` | Automated + Prune |
+
+## Secrets Management (Sealed Secrets)
+
+The [Sealed Secrets](https://github.com/bitnami/sealed-secrets) controller runs in `kube-system`, deployed by the `sealed-secrets` ArgoCD app from `argocd/apps/infra/sealed-secrets-app.yaml` (bitnami chart `2.19.1`, `fullnameOverride=sealed-secrets-controller` so `kubeseal` works without extra flags). It lets us commit encrypted `Secret` data to git safely — only the controller can decrypt it.
+
+**Rule:** Never commit raw credentials (GitHub PATs, DB passwords) to this repo — **not even base64-encoded**. GitHub push protection decodes base64 and blocks `ghp_…` tokens. Use Sealed Secrets (in-cluster) or GitHub Actions secrets (CI) instead.
+
+**Workflow to add/update a secret:**
+1. Install `kubeseal` locally.
+2. Build a normal `Secret` and pipe it through `kubeseal` to produce a `SealedSecret`:
+   ```bash
+   kubectl -n <namespace> create secret docker-registry <name> \
+     --docker-server=ghcr.io --docker-username=minhntt1 \
+     --docker-password=<PAT> --dry-run=client -o json \
+     | kubeseal -n <namespace> --name <name> -o yaml > sealedsecret-<name>.yaml
+   ```
+3. Commit the generated `sealedsecret-*.yaml`. The controller decrypts it in-cluster into the `Secret` of the same name/namespace.
+
+**Convention for network-statistics:** the charts expect Secrets produced by SealedSecrets (the charts set `imagePullSecret.enabled: false` and reference the secret directly):
+- `dockerconfigjson` pull secret named after the chart fullname — `<chart-fullname>-ghcr-secret` in `dev` / `prod` (the `<chart-fullname>` equals the ArgoCD Application/release name, e.g. `netstat-statistics-dev-ghcr-secret`).
+- DB passwords in a generic secret `<chart-fullname>-db-secret` with keys `quartz-scheduler-password` and `statistic-db-password`.
+  > The chart's `ConfigMap` currently embeds the DB password (decoded from a base64 value in `values.yaml`). For proper isolation, move to `env: valueFrom: secretKeyRef` against this Sealed Secret instead.
+
+**GitHub Actions secrets** (e.g. `LOCAL_INFRA_PAT` on the `netstat-statistics` repo) live in GitHub's secret store and are never committed to this repo.
 
 ## Status (verified via ArgoCD CLI)
 
@@ -53,7 +79,7 @@ flowchart LR
 | **ArgoCD Server Version** | `v3.1.0` (Kustomize v5.7.0, Helm v3.18.4, Kubectl v0.33.1) |
 | **ArgoCD CLI Version** | `v3.4.5` |
 | **Authentication** | Logged in as `admin` via `admin` issuer |
-| **Applications** | **2** — `apps` (root), `mysql-prod`, `mysql-exporter-prod`, `grafana` — **not yet synced** (pending Helm chart creation) |
+| **Applications** | `apps` (root), `sealed-secrets` (controller, deployed via #61), plus per-env apps (`mysql-*`, `grafana`, etc.) — synced via the root `apps` app |
 | **Clusters** | **1** — `in-cluster` (`https://kubernetes.default.svc`) |
 | **Repositories** | **1** — `local-infra` (`https://github.com/minhntt1/local-infra`) — **Successful** |
 | **Projects** | **1** — `default` (wildcard destinations/sources, orphaned resources disabled) |
