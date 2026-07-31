@@ -75,10 +75,10 @@ variable "vms" {
     prod = {
       vm_id   = 200
       cores   = 4
-      memory  = 8192
+      memory  = 14336
       disk_gb = 50
       forwards = [
-        { protocol = "tcp", public_port = 8080, internal_port = 30808 }
+        # { protocol = "tcp", public_port = 8080, internal_port = 30808 }
       ]
       extra_disks = [
         {
