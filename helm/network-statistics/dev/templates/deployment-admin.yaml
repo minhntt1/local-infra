@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "network-statistics-dev.fullname" . }}-admin
+  labels:
+    {{- include "network-statistics-dev.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "network-statistics-dev.selectorLabels" . | nindent 6 }}
+      role: admin
+  template:
+    metadata:
+      labels:
+        {{- include "network-statistics-dev.selectorLabels" . | nindent 8 }}
+        role: admin
+    spec:
+      imagePullSecrets:
+        - name: {{ include "network-statistics-dev.fullname" . }}-ghcr-secret
+      containers:
+        - name: admin
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.adminPort }}
+              protocol: TCP
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev-admin
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: /app/config/
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "network-statistics-dev.fullname" . }}-config
