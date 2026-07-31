@@ -49,21 +49,16 @@ flowchart LR
 
 ## Secrets Management (Sealed Secrets)
 
-The Sealed Secrets controller runs in `kube-system`, deployed by the `sealed-secrets` ArgoCD app (bitnami chart `2.19.1`, `fullnameOverride=sealed-secrets-controller`). It decrypts `SealedSecret` resources in-cluster so encrypted secrets are safe to commit to git.
-
-Use the **`seal-secret`** skill to seal any Kubernetes `Secret` into a `SealedSecret`:
-```bash
-seal.sh <namespace> <secret-name> <secret-manifest-json> [output-file]
-```
-The `seal.sh` script has `KUBECONFIG` built in and auto-fetches the controller public cert; sealing itself is local encryption — no plaintext touches the cluster.
+[Sealed Secrets](https://github.com/bitnami/sealed-secrets) encrypts Kubernetes `Secret` data into commit-safe `SealedSecret` manifests. The controller (bitnami chart `2.19.1`, `fullnameOverride=sealed-secrets-controller`) runs in `kube-system` and decrypts them in-cluster.
 
 **Hard rules:**
-- **NEVER commit raw credentials**, not even base64-encoded — GitHub push protection decodes base64 and blocks tokens.
-- GitHub Actions secrets (e.g. `LOCAL_INFRA_PAT`) stay in GitHub's store, never in this repo.
+- **NEVER commit raw or base64-encoded credentials** — GitHub push protection decodes base64 and blocks `ghp_…` tokens.
+- **GitHub Actions tokens** (e.g. `LOCAL_INFRA_PAT`) stay in GitHub's store, never in this repo.
+- **Use the `seal-secret` skill** (`seal.sh`) to seal — the skill has `KUBECONFIG` built in and auto-fetches the public cert; sealing is local encryption with zero cluster writes.
 
-**network-statistics convention** (charts set `imagePullSecret.enabled: false`):
-- `network-statistics-{dev,prod}-ghcr-secret` — `kubernetes.io/dockerconfigjson` pull secret.
-- `network-statistics-{dev,prod}-db-secret` — Opaque, keys `quartz-scheduler-password` / `statistic-db-password`.
+> **Step-by-step onboarding guide:** [sealed-secrets-onboard.md](sealed-secrets-onboard.md)
+
+Reference implementation: `helm/network-statistics/` (PRs #60, #67).
 
 ## Status (verified via ArgoCD CLI)
 
