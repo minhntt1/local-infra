@@ -18,5 +18,10 @@ provider "proxmox" {
     agent       = false
     username    = "root"
     private_key = var.ssh_pm_private_key
+
+    node {
+      name    = var.target_node
+      address = var.pm_host
+    }
   }
 }
