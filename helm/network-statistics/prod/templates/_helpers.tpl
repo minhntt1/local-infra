@@ -31,8 +31,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "network-statistics-prod.imagePullSecret" -}}
 {{- if .Values.imagePullSecret.enabled }}
-{{- $auth := printf "%s:%s" .Values.imagePullSecret.username .Values.imagePullSecret.password | b64enc }}
-{{- $config := printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"auth\":\"%s\"}}}" .Values.imagePullSecret.registry .Values.imagePullSecret.username .Values.imagePullSecret.password $auth }}
+{{- $auth := printf "%s:%s" .Values.imagePullSecret.username (.Values.imagePullSecret.password | b64dec) | b64enc }}
+{{- $config := printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"auth\":\"%s\"}}}" .Values.imagePullSecret.registry .Values.imagePullSecret.username (.Values.imagePullSecret.password | b64dec) $auth }}
 {{- $config | b64enc }}
 {{- end }}
 {{- end }}

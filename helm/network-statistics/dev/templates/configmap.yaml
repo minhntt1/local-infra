@@ -9,7 +9,7 @@ data:
     # DB connection overrides for dev environment
     spring.datasource.quartz-scheduler.jdbcUrl=jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.quartzDatabase }}?connectionTimeZone=UTC
     spring.datasource.quartz-scheduler.username={{ .Values.database.quartzUsername }}
-    spring.datasource.quartz-scheduler.password={{ .Values.database.quartzPassword }}
+    spring.datasource.quartz-scheduler.password={{ .Values.database.quartzPassword | b64dec }}
     spring.datasource.statistic-db.jdbcUrl=jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.statisticDatabase }}?connectionTimeZone=UTC
     spring.datasource.statistic-db.username={{ .Values.database.statisticUsername }}
-    spring.datasource.statistic-db.password={{ .Values.database.statisticPassword }}
+    spring.datasource.statistic-db.password={{ .Values.database.statisticPassword | b64dec }}

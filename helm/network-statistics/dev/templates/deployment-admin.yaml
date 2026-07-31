@@ -16,10 +16,8 @@ spec:
         {{- include "network-statistics-dev.selectorLabels" . | nindent 8 }}
         role: admin
     spec:
-      {{- if .Values.imagePullSecret.enabled }}
       imagePullSecrets:
         - name: {{ include "network-statistics-dev.fullname" . }}-ghcr-secret
-      {{- end }}
       containers:
         - name: admin
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

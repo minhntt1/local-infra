@@ -16,10 +16,8 @@ spec:
         {{- include "network-statistics-prod.selectorLabels" . | nindent 8 }}
         role: executor
     spec:
-      {{- if .Values.imagePullSecret.enabled }}
       imagePullSecrets:
         - name: {{ include "network-statistics-prod.fullname" . }}-ghcr-secret
-      {{- end }}
       containers:
         - name: executor
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
