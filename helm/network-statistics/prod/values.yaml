@@ -30,6 +30,7 @@ resources:
     memory: 256Mi
 
 database:
+  useSealed: true
   host: mysql-prod.prod.svc
   port: 3306
   quartzDatabase: quartz
