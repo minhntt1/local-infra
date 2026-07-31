@@ -31,20 +31,20 @@ spec:
               value: prd-executor
             - name: LOGGING_FILE_NAME
               value: /logging/network-statistics-log1/executor.log
-            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_JDBCURL
+            - name: SPRING_DATASOURCE_QUARTZSCHEDULER_JDBCURL
               value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.quartzDatabase }}?connectionTimeZone=UTC"
-            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_USERNAME
+            - name: SPRING_DATASOURCE_QUARTZSCHEDULER_USERNAME
               value: "{{ .Values.database.quartzUsername }}"
-            - name: SPRING_DATASOURCE_QUARTZ_SCHEDULER_PASSWORD
+            - name: SPRING_DATASOURCE_QUARTZSCHEDULER_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "network-statistics-prod.fullname" . }}-db-secret
                   key: quartz-scheduler-password
-            - name: SPRING_DATASOURCE_STATISTIC_DB_JDBCURL
+            - name: SPRING_DATASOURCE_STATISTICDB_JDBCURL
               value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.statisticDatabase }}?connectionTimeZone=UTC"
-            - name: SPRING_DATASOURCE_STATISTIC_DB_USERNAME
+            - name: SPRING_DATASOURCE_STATISTICDB_USERNAME
               value: "{{ .Values.database.statisticUsername }}"
-            - name: SPRING_DATASOURCE_STATISTIC_DB_PASSWORD
+            - name: SPRING_DATASOURCE_STATISTICDB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "network-statistics-prod.fullname" . }}-db-secret
