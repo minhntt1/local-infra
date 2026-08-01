@@ -1,5 +1,15 @@
 # Self-Hosted GitHub Runner
 
+## Layout
+
+```
+.github/
+└── workflows/
+    ├── README.md        # This file
+    ├── ansible.yml      # Ansible lint + apply CI
+    └── terraform.yml    # Terraform fmt / plan / apply CI
+```
+
 The `local-infra` workflows run on a self-hosted GitHub Actions runner hosted inside the Proxmox lab, not on GitHub's shared infrastructure. This is required because the `terraform-apply` job must reach the Proxmox API on the private lab network.
 
 ## Runner Host

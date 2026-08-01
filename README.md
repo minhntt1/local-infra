@@ -78,50 +78,15 @@ flowchart TB
 
 ```
 local-infra/
-├── .github/
-│   └── workflows/
-│       ├── ansible.yml        # Ansible lint + apply CI
-│       └── terraform.yml      # Terraform fmt / plan / apply CI
-├── ansible/                   # Configuration management & service bootstrap
-│   ├── ansible.cfg            # Default inventory, remote_user=admin + become
-│   ├── inventory/
-│   │   ├── proxmox.yml        # Dynamic Proxmox inventory (DHCP IP resolution)
-│   │   └── group_vars/
-│   │       └── all.yml        # Shared vars (k3s version, token placeholder)
-│   ├── playbooks/
-│   │   └── site.yml           # Orchestrates common -> server -> tools -> agents
-│   └── roles/
-│       ├── k3s_common/        # Shared prereqs (swap, kernel modules, sysctl, apt)
-│       ├── k3s_server/        # Install k3s control-plane, fetch kubeconfig
-│       ├── k3s_tools/         # Install Helm CLI and ArgoCD after k3s
-│       └── k3s_agent/         # Join workers to the server (no-op while empty)
-├── argocd/                    # ArgoCD App of Apps definitions
-│   ├── apps/                  # Child Application CRDs (infra, dev, monitoring, prod)
-│   └── infra/                 # Infrastructure configs (traefik HelmChartConfig)
-├── docs/                      # Infrastructure documentation
-│   ├── network-statistics-ingress.md  # Ingress routing & context-path config
-│   └── proxmox/
-│       └── data-hdd-storage.md        # Proxmox data HDD storage setup
-├── helm/                      # Helm charts for lab services
-│   ├── fluentbit/             # Fluent Bit log shipper
-│   ├── grafana/               # Grafana Enterprise dashboard
-│   ├── loki/                  # Loki log storage
-│   ├── mysql/                 # MySQL (dev + prod)
-│   │   ├── dev/
-│   │   └── prod/
-│   ├── mysql-exporter/prod/     # Prometheus mysqld-exporter
-│   └── prometheus/            # Prometheus metrics
-└── terraform/                 # Proxmox VM provisioning
-    ├── backend.tf             # Remote state config
-    ├── imports.tf             # Imported resources
-    ├── main.tf                # VM resources + NAT hook scripts
-    ├── outputs.tf             # VM IDs, names, IPs, MACs
-    ├── providers.tf           # Proxmox + SSH provider config
-    ├── templates/
-    │   └── nat-hook.sh.tpl    # Per-VM iptables NAT hook template
-    ├── terraform.tfvars.example # Example variables (no secrets)
-    └── variables.tf           # All input variables + VM specs
+├── .github/          # GitHub Actions workflows and runner docs
+├── ansible/          # Configuration management & service bootstrap
+├── argocd/           # ArgoCD App of Apps definitions
+├── docs/             # Infrastructure documentation
+├── helm/             # Helm charts for lab services
+└── terraform/        # Proxmox VM provisioning
 ```
+
+> 📖 See each sub-directory's `README.md` for its full layout.
 
 ## Component Documentation
 
