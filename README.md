@@ -98,6 +98,10 @@ local-infra/
 ├── argocd/                    # ArgoCD App of Apps definitions
 │   ├── apps/                  # Child Application CRDs (infra, dev, monitoring, prod)
 │   └── infra/                 # Infrastructure configs (traefik HelmChartConfig)
+├── docs/                      # Infrastructure documentation
+│   ├── network-statistics-ingress.md  # Ingress routing & context-path config
+│   └── proxmox/
+│       └── data-hdd-storage.md        # Proxmox data HDD storage setup
 ├── helm/                      # Helm charts for lab services
 │   ├── fluentbit/             # Fluent Bit log shipper
 │   ├── grafana/               # Grafana Enterprise dashboard
@@ -121,6 +125,7 @@ local-infra/
 
 ## Component Documentation
 
+- [Infrastructure Docs](./docs/) — Ingress routing, Proxmox storage, and other infra guides
 - [Terraform: Proxmox VM Provisioning](./terraform/README.md)
 - [Self-Hosted GitHub Runner](./.github/workflows/README.md)
 - [Ansible: Configuration & Service Bootstrap](./ansible/README.md)
