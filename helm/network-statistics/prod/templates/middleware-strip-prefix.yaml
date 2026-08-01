@@ -1,0 +1,12 @@
+{{- if .Values.ingressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "network-statistics-prod.fullname" . }}-strip-prefix
+  labels:
+    {{- include "network-statistics-prod.labels" . | nindent 4 }}
+spec:
+  stripPrefix:
+    prefixes:
+      - /prod/network-statistics
+{{- end }}

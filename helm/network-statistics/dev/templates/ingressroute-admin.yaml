@@ -9,8 +9,10 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: PathPrefix(`/network-statistics`)
+    - match: PathPrefix(`/dev/network-statistics`)
       kind: Rule
+      middlewares:
+        - name: {{ include "network-statistics-dev.fullname" . }}-strip-prefix
       services:
         - name: {{ include "network-statistics-dev.fullname" . }}-admin
           port: {{ .Values.service.adminPort }}
