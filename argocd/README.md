@@ -5,7 +5,6 @@
 ```
 argocd/
 ├── README.md                         # This file
-├── sealed-secrets-onboard.md         # Sealed Secrets onboarding guide
 ├── apps/                             # ArgoCD Application CRDs (App of Apps)
 │   ├── infra/                        # Infrastructure apps (sealed-secrets, traefik-config)
 │   ├── dev/                          # Dev environment apps (mysql, network-statistics)
@@ -58,7 +57,7 @@ flowchart LR
 - **GitHub Actions tokens** (e.g. `LOCAL_INFRA_PAT`) stay in GitHub's store, never in this repo.
 - **Use the `seal-secret` skill** (`seal.sh`) to seal — the skill has `KUBECONFIG` built in and auto-fetches the public cert; sealing is local encryption with zero cluster writes.
 
-> **Step-by-step onboarding guide:** [sealed-secrets-onboard.md](sealed-secrets-onboard.md)
+> **Step-by-step onboarding guide:** [sealed-secrets-onboard.md](../docs/sealed-secrets-onboard.md)
 
 Reference implementation: `helm/network-statistics/` (PRs #60, #67).
 
