@@ -29,8 +29,6 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prd-admin
-            - name: SPRING_SERVLET_CONTEXT_PATH
-              value: /prod/network-statistics
             - name: SPRING_DATASOURCE_QUARTZSCHEDULER_JDBCURL
               value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.quartzDatabase }}?connectionTimeZone=UTC"
             - name: SPRING_DATASOURCE_QUARTZSCHEDULER_USERNAME
