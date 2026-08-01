@@ -1,5 +1,21 @@
 # ArgoCD
 
+## Layout
+
+```
+argocd/
+├── README.md                         # This file
+├── sealed-secrets-onboard.md         # Sealed Secrets onboarding guide
+├── apps/                             # ArgoCD Application CRDs (App of Apps)
+│   ├── infra/                        # Infrastructure apps (sealed-secrets, traefik-config)
+│   ├── dev/                          # Dev environment apps (mysql, network-statistics)
+│   ├── monitoring/                   # Monitoring apps (fluentbit, grafana, loki, prometheus)
+│   └── prod/                         # Prod environment apps (mysql, mysql-exporter, network-statistics)
+└── infra/
+    └── traefik/                      # Traefik HelmChartConfig
+        └── helmchartconfig.yaml
+```
+
 ## Architecture — App of Apps Pattern
 
 ArgoCD uses the **App of Apps** pattern to manage workloads declaratively. A single root Application (`apps`) watches the `argocd/apps/` directory in the repo and creates child Applications based on the YAML manifests found there.
