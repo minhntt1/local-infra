@@ -39,7 +39,3 @@ database:
 
 ingressRoute:
   enabled: true
-
-logging:
-  volume:
-    type: emptyDir

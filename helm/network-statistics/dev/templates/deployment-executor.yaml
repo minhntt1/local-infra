@@ -30,8 +30,6 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: dev-executor
-            - name: LOGGING_FILE_NAME
-              value: /logging/network-statistics-log1/executor.log
             - name: SPRING_DATASOURCE_QUARTZSCHEDULER_JDBCURL
               value: "jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.quartzDatabase }}?connectionTimeZone=UTC"
             - name: SPRING_DATASOURCE_QUARTZSCHEDULER_USERNAME
@@ -50,21 +48,5 @@ spec:
                 secretKeyRef:
                   name: {{ include "network-statistics-dev.fullname" . }}-db-secret
                   key: statistic-db-password
-          volumeMounts:
-            - name: logging
-              mountPath: /logging
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        {{- if eq .Values.logging.volume.type "emptyDir" }}
-        - name: logging
-          emptyDir: {}
-        {{- else if eq .Values.logging.volume.type "hostPath" }}
-        - name: logging
-          hostPath:
-            path: /logging/network-statistics-log1
-        {{- else }}
-        - name: logging
-          persistentVolumeClaim:
-            claimName: {{ include "network-statistics-dev.fullname" . }}-logging-pvc
-        {{- end }}
