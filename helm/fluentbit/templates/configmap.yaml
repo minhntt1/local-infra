@@ -17,7 +17,7 @@ data:
         Path              /var/log/containers/network-statistics-prod-executor-*_prod_*.log
         Parser            cri
         Tag               net-stat-executor-prod.<id>
-        Tag_Regex         ^network-statistics-prod-executor-(?<id>[^_]+)_prod_.*\.log$
+        Tag_Regex         ^network-statistics-prod-executor-(?<id>[^_]+)_prod_executor-.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
@@ -26,7 +26,7 @@ data:
         Path              /var/log/containers/network-statistics-dev-executor-*_dev_*.log
         Parser            cri
         Tag               net-stat-executor-dev.<id>
-        Tag_Regex         ^network-statistics-dev-executor-(?<id>[^_]+)_dev_.*\.log$
+        Tag_Regex         ^network-statistics-dev-executor-(?<id>[^_]+)_dev_executor-.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
