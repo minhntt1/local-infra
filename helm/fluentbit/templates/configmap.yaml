@@ -16,8 +16,8 @@ data:
         Name              tail
         Path              /var/log/containers/network-statistics-prod-executor-*_prod_*.log
         Parser            cri
-        Tag               net-stat-executor-prod.<pod>
-        Tag_Regex         ^(?<pod>[^_]+)_prod_.*\.log$
+        Tag               net-stat-executor-prod.<id>
+        Tag_Regex         ^network-statistics-prod-executor-(?<id>[^_]+)_prod_.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
@@ -25,8 +25,8 @@ data:
         Name              tail
         Path              /var/log/containers/network-statistics-dev-executor-*_dev_*.log
         Parser            cri
-        Tag               net-stat-executor-dev.<pod>
-        Tag_Regex         ^(?<pod>[^_]+)_dev_.*\.log$
+        Tag               net-stat-executor-dev.<id>
+        Tag_Regex         ^network-statistics-dev-executor-(?<id>[^_]+)_dev_.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
