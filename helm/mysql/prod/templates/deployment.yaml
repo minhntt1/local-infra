@@ -6,6 +6,7 @@ metadata:
     {{- include "mysql-prod.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       {{- include "mysql-prod.selectorLabels" . | nindent 6 }}
