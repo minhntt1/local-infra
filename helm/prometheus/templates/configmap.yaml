@@ -24,11 +24,11 @@ data:
             labels:
               app: "prometheus"
 
-      - job_name: "mysql_exporter1"
+      - job_name: "mysql-exporter-prod"
         static_configs:
-          - targets: ["mysql-exporter.dev.svc:9104"]
+          - targets: ["mysql-exporter-prod.prod.svc:9104"]
             labels:
-              app: "mysql_exporter1"
+              app: "mysql-exporter-prod"
 
       - job_name: "network-statistics-executor"
         metrics_path: '/actuator/prometheus'
