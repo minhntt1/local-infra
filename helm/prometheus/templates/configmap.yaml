@@ -30,9 +30,16 @@ data:
             labels:
               app: "mysql-exporter-prod"
 
-      - job_name: "network-statistics-executor"
+      - job_name: "network-statistics-executor-dev"
         metrics_path: '/actuator/prometheus'
         static_configs:
           - targets: ["network-statistic1.dev.svc:8080"]
             labels:
-              app: "network_statistic1"
+              app: "network-statistics-executor-dev"
+
+      - job_name: "network-statistics-executor-prod"
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ["network-statistics-prod-executor.prod.svc:8080"]
+            labels:
+              app: "network-statistics-executor-prod"
