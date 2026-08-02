@@ -6,7 +6,7 @@ metadata:
     {{- include "mysql-exporter-prod.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
-  revisionHistoryLimit: 3
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       {{- include "mysql-exporter-prod.selectorLabels" . | nindent 6 }}

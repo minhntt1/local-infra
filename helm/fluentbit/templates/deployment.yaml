@@ -6,7 +6,7 @@ metadata:
     {{- include "fluentbit.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
-  revisionHistoryLimit: 3
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       {{- include "fluentbit.selectorLabels" . | nindent 6 }}
