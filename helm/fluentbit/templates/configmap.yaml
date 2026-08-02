@@ -16,7 +16,8 @@ data:
         Name              tail
         Path              /var/log/containers/network-statistics-prod-executor-*_prod_*.log
         Parser            cri
-        Tag               net-stat-executor-prod
+        Tag               net-stat-executor-prod.<pod>
+        Tag_Regex         ^(?<pod>[^_]+)_prod_.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
@@ -24,34 +25,35 @@ data:
         Name              tail
         Path              /var/log/containers/network-statistics-dev-executor-*_dev_*.log
         Parser            cri
-        Tag               net-stat-executor-dev
+        Tag               net-stat-executor-dev.<pod>
+        Tag_Regex         ^(?<pod>[^_]+)_dev_.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
     [FILTER]
         Name              parser
-        Match             net-stat-executor-prod
+        Match             net-stat-executor-prod.*
         Key_Name          log
         Parser            spring
         Reserve_Data      On
 
     [FILTER]
         Name              parser
-        Match             net-stat-executor-dev
+        Match             net-stat-executor-dev.*
         Key_Name          log
         Parser            spring
         Reserve_Data      On
 
     [OUTPUT]
         Name              loki
-        Match             net-stat-executor-prod
+        Match             net-stat-executor-prod.*
         Host              {{ .Values.loki.host }}
         Port              {{ .Values.loki.port }}
         Labels            job=fluentbit,app=net-stat-executor,env=prod
 
     [OUTPUT]
         Name              loki
-        Match             net-stat-executor-dev
+        Match             net-stat-executor-dev.*
         Host              {{ .Values.loki.host }}
         Port              {{ .Values.loki.port }}
         Labels            job=fluentbit,app=net-stat-executor,env=dev
