@@ -17,7 +17,7 @@ data:
         Path              /var/log/containers/network-statistics-prod-executor-*_prod_*.log
         Parser            cri
         Tag               net-stat-executor-prod.<id>
-        Tag_Regex         ^network-statistics-prod-executor-(?<id>[^_]+)_prod_executor-.*\.log$
+        Tag_Regex         network-statistics-prod-executor-(?<id>[^_]+)_prod_executor-.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
@@ -26,7 +26,7 @@ data:
         Path              /var/log/containers/network-statistics-dev-executor-*_dev_*.log
         Parser            cri
         Tag               net-stat-executor-dev.<id>
-        Tag_Regex         ^network-statistics-dev-executor-(?<id>[^_]+)_dev_executor-.*\.log$
+        Tag_Regex         network-statistics-dev-executor-(?<id>[^_]+)_dev_executor-.*\.log$
         Refresh_Interval  5
         Skip_Long_Lines   Off
 
@@ -59,10 +59,15 @@ data:
         Labels            job=fluentbit,app=net-stat-executor,env=dev
   parsers.conf: |
     [PARSER]
+        Name        cri
+        Format      regex
+        Regex       ^(?<cri_time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[FP]) (?<log>.*)$
+
+    [PARSER]
         Name        spring
         Format      regex
-        Regex       ^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}) +(?<level>[A-Z]+) +\[(?<thread>[^\]]+)\] +(?<logger>[^ ]+) - (?<message>.*)$
+        Regex       ^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)  (?<level>[A-Z]+) +\d+ --- +\[(?<app>[^\]]+)\] +\[(?<thread>[^\]]+)\] +(?<logger>\S+) : (?<message>.*)$
         Time_Key    time
-        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Format %Y-%m-%dT%H:%M:%S.%LZ
         Time_Keep   On
         Time_Offset +0000
