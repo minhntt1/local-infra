@@ -2,7 +2,7 @@ replicaCount: 0
 
 image:
   repository: ghcr.io/minhntt1/network-statistics
-  tag: 809dea6
+  tag: 1c66e27
   pullPolicy: IfNotPresent
 
 imagePullSecret:
