@@ -1,0 +1,12 @@
+<databaseChangeLog>
+
+    <changeSet
+        comments="init baseline">
+
+        <sqlFile
+            path="../sql/v00000__baseline.sql" />
+
+    </changeSet>
+
+
+</databaseChangeLog>

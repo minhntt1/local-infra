@@ -1,0 +1,96 @@
+{
+  // ---- JDK / language level ----
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-25",
+      "path": "/usr/lib/jvm/java-25-openjdk-amd64",
+      "default": true
+    }
+  ],
+  // Mirrors AutoImportSettings autoReloadType="SELECTIVE" in workspace.xml:
+  "java.configuration.updateBuildConfiguration": "automatic",
+
+  // ---- Gradle import (workspace.xml / gradle.xml) ----
+//   "java.import.gradle.enabled": true,
+//   "java.import.gradle.wrapper.enabled": true,
+
+  // ---- Lombok (compiler.xml annotationProcessing profile) ----
+  // Recent versions of the Java extension bundle Lombok support automatically;
+  // this just makes sure it's on.
+  "java.jdt.ls.lombokSupport.enabled": true,
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G -Xms100m -Xlog:disable",
+  "java.jdt.ls.java.home": "/usr/lib/jvm/java-25-openjdk-amd64",
+
+  // ---- Misc editor/import behavior ----
+  "java.eclipse.downloadSources": true,
+  "java.import.gradle.offline.enabled": false,
+  "java.import.gradle.annotationProcessing.enabled": true,
+
+  // ---- Maven ----
+  "java.import.maven.offline.enabled": false,
+  "java.import.maven.enabled": true,
+  "maven.executable.path": "mvn",
+  "maven.terminal.useJavaHome": true,
+  "maven.terminal.customEnv": [
+    {
+      "environmentVariable": "JAVA_HOME",
+      "value": "/usr/lib/jvm/java-25-openjdk-amd64"
+    }
+  ],
+
+  // ---- Editor ----
+  "editor.defaultFormatter": "redhat.java",
+
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": true,
+  // ---- Files to hide from the explorer (roughly matches what IntelliJ hides) ----
+  "files.exclude": {
+    "**/scripts/proxmox/target": true,
+  },
+  "search.exclude": {
+    "**/scripts/proxmox/target": true,
+  },
+  "files.watcherExclude": {
+    "**/scripts/proxmox/target": true,
+  },
+
+  "java.compile.nullAnalysis.mode": "automatic",
+
+  "java.debug.settings.forceBuildBeforeLaunch": true,
+  "java.debug.settings.onBuildFailureProceed": true,
+
+  // "java.test.defaultConfig": "unit-tests",
+  "java.test.config": [
+    {
+      "name": "unit-tests",
+      "workingDirectory": "${workspaceFolder}",
+      "testKind": "junit",
+      "vmArgs": [],
+      "args": [],
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "test"
+      },
+      // Excludes anything tagged @Tag("integration") — remove/adjust the
+      // filter if you don't split tests that way.
+      "filters": {
+        "tags": ["!integration"]
+      }
+    },
+    {
+      "name": "integration-tests",
+      "workingDirectory": "${workspaceFolder}",
+      "testKind": "junit",
+      "vmArgs": ["-Xmx1024m"],
+      "args": [],
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "test"
+      },
+      "filters": {
+        "tags": ["integration"]
+      }
+    }
+  ],
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  }
+}
