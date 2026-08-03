@@ -1,0 +1,5 @@
+<databaseChangeLog>
+
+    <include file="../sql/v00000__baseline.sql"/>
+
+</databaseChangeLog>
