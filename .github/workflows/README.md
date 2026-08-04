@@ -7,7 +7,9 @@
 └── workflows/
     ├── README.md        # This file
     ├── ansible.yml      # Ansible lint + apply CI
-    └── terraform.yml    # Terraform fmt / plan / apply CI
+    ├── terraform.yml    # Terraform fmt / plan / apply CI
+    ├── liquibase-preview.yml  # Liquibase preview on PR (posts DDL as comment)
+    └── liquibase-sync.yml     # Apply Liquibase changelogs on merge to main
 ```
 
 The `local-infra` workflows run on a self-hosted GitHub Actions runner hosted inside the Proxmox lab, not on GitHub's shared infrastructure. This is required because the `terraform-apply` job must reach the Proxmox API on the private lab network.
@@ -37,6 +39,24 @@ The `local-infra` workflows run on a self-hosted GitHub Actions runner hosted in
   ```
 
 - The runner must be online for `terraform-apply` (and any other workflow) to execute, since jobs are pinned to this self-hosted runner.
+
+## K8s Runner (Liquibase)
+
+Separate from the LXC runner above, the `liquibase-preview` and `liquibase-sync` workflows run on an **ephemeral self-hosted runner deployed inside the k3s cluster** (deployed by the `liquibase-runner` ArgoCD app via `helm/liquibase-runner/`). This gives the runner direct in-cluster DNS access to the MySQL services so Liquibase can reach them without exposing MySQL externally.
+
+| Attribute | Value |
+|-----------|-------|
+| Image | `ghcr.io/actions/actions-runner:2.336.0` |
+| Namespace | `github-runners` |
+| Runner name | `k8s-liquibase-runner` |
+| Labels | `self-hosted,k8s,liquibase` |
+| Ephemeral | `true` (single job, then exits; ArgoCD restarts a fresh pod) |
+
+**Liquibase sync flow** (managed under `database/`):
+- `liquibase-preview.yml` — on PR touching `database/**`, runs `liquibase status --verbose` + `liquibase updateSQL` and posts the pending changesets / DDL as a PR comment.
+- `liquibase-sync.yml` — on push to `main` touching `database/**`, runs `liquibase update` against the dev and prod MySQL databases.
+- Both use `dorny/paths-filter@v3` to only preview/sync the specific databases that changed, and provision Java + Liquibase on the runner via `actions/setup-java@v4` + `liquibase/setup-liquibase@v3` (no kubectl / Job orchestration needed).
+- DB credentials are sealed into SealedSecrets in the `github-runners` namespace (`liquibase-dev-db` / `liquibase-prod-db`) and exposed to the runner as `DEV_JDBC_PASSWORD` / `PROD_JDBC_PASSWORD`.
 
 ## Runner Rules
 

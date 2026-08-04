@@ -1,0 +1,91 @@
+name: Liquibase DB Sync
+on:
+  push:
+    branches: [main]
+    paths: ['database/**']
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  sync-databases:
+    runs-on: [self-hosted, k8s, liquibase]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            dev-network-statistics:
+              - 'database/dev/mysql/network_statistics/**'
+            dev-quartz:
+              - 'database/dev/mysql/quartz/**'
+            dev-testdb:
+              - 'database/dev/mysql/testdb/**'
+            prod-network-statistics:
+              - 'database/prod/mysql/network_statistics/**'
+            prod-quartz:
+              - 'database/prod/mysql/quartz/**'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: liquibase/setup-liquibase@v3
+        with:
+          version: '4.32.0'
+          edition: community
+
+      - name: Sync dev - network_statistics
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-network-statistics == 'true'
+        run: |
+          liquibase \
+            --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
+            --username="root" \
+            --password="$DEV_JDBC_PASSWORD" \
+            --changelog-file="database/dev/mysql/network_statistics/changelog/changelog1.xml" \
+            update
+
+      - name: Sync dev - quartz
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-quartz == 'true'
+        run: |
+          liquibase \
+            --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
+            --username="root" \
+            --password="$DEV_JDBC_PASSWORD" \
+            --changelog-file="database/dev/mysql/quartz/changelog/changelog1.xml" \
+            update
+
+      - name: Sync dev - testdb
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-testdb == 'true'
+        run: |
+          liquibase \
+            --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/testdb?connectionTimeZone=UTC" \
+            --username="root" \
+            --password="$DEV_JDBC_PASSWORD" \
+            --changelog-file="database/dev/mysql/testdb/changelog/changelog1.xml" \
+            update
+
+      - name: Sync prod - network_statistics
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-network-statistics == 'true'
+        run: |
+          liquibase \
+            --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
+            --username="root" \
+            --password="$PROD_JDBC_PASSWORD" \
+            --changelog-file="database/prod/mysql/network_statistics/changelog/changelog1.xml" \
+            update
+
+      - name: Sync prod - quartz
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-quartz == 'true'
+        run: |
+          liquibase \
+            --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
+            --username="root" \
+            --password="$PROD_JDBC_PASSWORD" \
+            --changelog-file="database/prod/mysql/quartz/changelog/changelog1.xml" \
+            update

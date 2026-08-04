@@ -6,7 +6,7 @@
 argocd/
 ├── README.md                         # This file
 ├── apps/                             # ArgoCD Application CRDs (App of Apps)
-│   ├── infra/                        # Infrastructure apps (sealed-secrets, traefik-config)
+│   ├── infra/                        # Infrastructure apps (sealed-secrets, traefik-config, liquibase-runner)
 │   ├── dev/                          # Dev environment apps (mysql, network-statistics)
 │   ├── monitoring/                   # Monitoring apps (fluentbit, grafana, loki, prometheus)
 │   └── prod/                         # Prod environment apps (mysql, mysql-exporter, network-statistics)
@@ -30,6 +30,7 @@ flowchart LR
 
     INFRA --> TRAEFIK_CFG["HelmChartConfig: traefik\nargocd/infra/traefik/\nNamespace: kube-system"]
     INFRA --> SEALED["App: sealed-secrets\nargocd/apps/infra/\nNamespace: kube-system (bitnami chart)"]
+    INFRA --> LIQUIBASE_RUNNER["App: liquibase-runner\nargocd/apps/infra/\nNamespace: github-runners"]
     DEV --> MYSQL_DEV["Helm Chart: mysql/dev\nhelm/mysql/dev/"]
     DEV --> NETSTATS_DEV["Helm Chart: network-statistics/dev\nhelm/network-statistics/dev/"]
     MON --> FB["Helm Chart: fluentbit\nhelm/fluentbit/"]
@@ -44,9 +45,12 @@ flowchart LR
 | Child App | ArgoCD Path | Namespace | Helm Chart Source |
 |-----------|-------------|-----------|-------------------|
 | `infra` | `argocd/apps/infra/` | `kube-system` | `argocd/infra/traefik/` (HelmChartConfig), `sealed-secrets-app.yaml` (bitnami Helm chart) |
+| `liquibase-runner` | `argocd/apps/infra/` | `github-runners` | `helm/liquibase-runner/` |
 | `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/dev/`, `helm/network-statistics/dev/` |
 | `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/`, `helm/grafana/` |
 | `prod` | `argocd/apps/prod/` | `prod` | `helm/mysql/prod/`, `helm/mysql-exporter/prod/`, `helm/network-statistics/prod/` |
+
+> Note: `liquibase-runner` lives under `argocd/apps/infra/` but targets the `github-runners` namespace (a non-`kube-system` infra app).
 
 ## Secrets Management (Sealed Secrets)
 
