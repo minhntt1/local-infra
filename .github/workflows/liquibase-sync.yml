@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['database/**']
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -15,6 +16,7 @@ jobs:
 
       - uses: dorny/paths-filter@v3
         id: changes
+        if: github.event_name != 'workflow_dispatch'
         with:
           filters: |
             dev-network-statistics:
@@ -39,7 +41,7 @@ jobs:
           edition: community
 
       - name: Sync dev - network_statistics
-        if: steps.changes.outputs.dev-network-statistics == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-network-statistics == 'true'
         run: |
           liquibase \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
@@ -49,7 +51,7 @@ jobs:
             update
 
       - name: Sync dev - quartz
-        if: steps.changes.outputs.dev-quartz == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-quartz == 'true'
         run: |
           liquibase \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
@@ -59,7 +61,7 @@ jobs:
             update
 
       - name: Sync dev - testdb
-        if: steps.changes.outputs.dev-testdb == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-testdb == 'true'
         run: |
           liquibase \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/testdb?connectionTimeZone=UTC" \
@@ -69,7 +71,7 @@ jobs:
             update
 
       - name: Sync prod - network_statistics
-        if: steps.changes.outputs.prod-network-statistics == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-network-statistics == 'true'
         run: |
           liquibase \
             --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
@@ -79,7 +81,7 @@ jobs:
             update
 
       - name: Sync prod - quartz
-        if: steps.changes.outputs.prod-quartz == 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-quartz == 'true'
         run: |
           liquibase \
             --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
