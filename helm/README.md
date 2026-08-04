@@ -29,6 +29,7 @@ Fixed in `local-infra` branch `fix/loki-config-deprecated-fields` (commit `c1c7e
 | `fluentbit` | monitoring | Log shipper into Loki |
 | `grafana` | monitoring | Grafana dashboard |
 | `loki` | monitoring | Log storage |
+| `liquibase-runner` | github-runners | Ephemeral GitHub Actions runner that auto-applies Liquibase changelogs to dev/prod MySQL |
 | `mysql-dev` | dev | MySQL dev database |
 | `mysql-prod` | prod | MySQL prod database |
 | `mysql-exporter-prod` | prod | Prometheus mysqld-exporter |
