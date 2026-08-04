@@ -1,0 +1,6 @@
+apiVersion: v2
+name: liquibase-runner
+description: Ephemeral GitHub Actions self-hosted runner for Liquibase DB sync
+type: application
+version: 0.1.0
+appVersion: "2.336.0"

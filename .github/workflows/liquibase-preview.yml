@@ -1,0 +1,189 @@
+name: Liquibase Preview
+on:
+  pull_request:
+    paths: ['database/**']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  preview:
+    runs-on: [self-hosted, k8s, liquibase]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            dev-network-statistics:
+              - 'database/dev/mysql/network_statistics/**'
+            dev-quartz:
+              - 'database/dev/mysql/quartz/**'
+            dev-testdb:
+              - 'database/dev/mysql/testdb/**'
+            prod-network-statistics:
+              - 'database/prod/mysql/network_statistics/**'
+            prod-quartz:
+              - 'database/prod/mysql/quartz/**'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: liquibase/setup-liquibase@v3
+        with:
+          version: '4.32.0'
+          edition: community
+
+      - name: Generate preview report
+        run: |
+          rm -f /tmp/liquibase-preview.md
+          touch /tmp/liquibase-preview.md
+
+      - name: Preview dev - network_statistics
+        if: steps.changes.outputs.dev-network-statistics == 'true'
+        run: |
+          JDBC_URL="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC"
+          {
+            echo "## dev/network_statistics"
+            echo ""
+            echo "**Status:**"
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/network_statistics/changelog/changelog1.xml" \
+              status --verbose
+            echo ""
+            echo "<details><summary>SQL Preview</summary>"
+            echo ""
+            echo '```sql'
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/network_statistics/changelog/changelog1.xml" \
+              updateSQL
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> /tmp/liquibase-preview.md
+
+      - name: Preview dev - quartz
+        if: steps.changes.outputs.dev-quartz == 'true'
+        run: |
+          JDBC_URL="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/quartz?connectionTimeZone=UTC"
+          {
+            echo "## dev/quartz"
+            echo ""
+            echo "**Status:**"
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/quartz/changelog/changelog1.xml" \
+              status --verbose
+            echo ""
+            echo "<details><summary>SQL Preview</summary>"
+            echo ""
+            echo '```sql'
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/quartz/changelog/changelog1.xml" \
+              updateSQL
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> /tmp/liquibase-preview.md
+
+      - name: Preview dev - testdb
+        if: steps.changes.outputs.dev-testdb == 'true'
+        run: |
+          JDBC_URL="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/testdb?connectionTimeZone=UTC"
+          {
+            echo "## dev/testdb"
+            echo ""
+            echo "**Status:**"
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/testdb/changelog/changelog1.xml" \
+              status --verbose
+            echo ""
+            echo "<details><summary>SQL Preview</summary>"
+            echo ""
+            echo '```sql'
+            liquibase --url="$JDBC_URL" --username="root" --password="$DEV_JDBC_PASSWORD" \
+              --changelog-file="database/dev/mysql/testdb/changelog/changelog1.xml" \
+              updateSQL
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> /tmp/liquibase-preview.md
+
+      - name: Preview prod - network_statistics
+        if: steps.changes.outputs.prod-network-statistics == 'true'
+        run: |
+          JDBC_URL="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC"
+          {
+            echo "## prod/network_statistics"
+            echo ""
+            echo "**Status:**"
+            liquibase --url="$JDBC_URL" --username="root" --password="$PROD_JDBC_PASSWORD" \
+              --changelog-file="database/prod/mysql/network_statistics/changelog/changelog1.xml" \
+              status --verbose
+            echo ""
+            echo "<details><summary>SQL Preview</summary>"
+            echo ""
+            echo '```sql'
+            liquibase --url="$JDBC_URL" --username="root" --password="$PROD_JDBC_PASSWORD" \
+              --changelog-file="database/prod/mysql/network_statistics/changelog/changelog1.xml" \
+              updateSQL
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+          } >> /tmp/liquibase-preview.md
+
+      - name: Preview prod - quartz
+        if: steps.changes.outputs.prod-quartz == 'true'
+        run: |
+          JDBC_URL="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/quartz?connectionTimeZone=UTC"
+          {
+            echo "## prod/quartz"
+            echo ""
+            echo "**Status:**"
+            liquibase --url="$JDBC_URL" --username="root" --password="$PROD_JDBC_PASSWORD" \
+              --changelog-file="database/prod/mysql/quartz/changelog/changelog1.xml" \
+              status --verbose
+            echo ""
+            echo "<details><summary>SQL Preview</summary>"
+            echo ""
+            echo '```sql'
+            liquibase --url="$JDBC_URL" --username="root" --password="$PROD_JDBC_PASSWORD" \
+              --changelog-file="database/prod/mysql/quartz/changelog/changelog1.xml" \
+              updateSQL
+            echo '```'
+            echo ""
+            echo "</details>"
+          } >> /tmp/liquibase-preview.md
+
+      - name: Post preview as PR comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '/tmp/liquibase-preview.md';
+            if (!fs.existsSync(path)) {
+              core.notice('No preview report generated (no database files changed)');
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8').trim();
+            if (!body) return;
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
