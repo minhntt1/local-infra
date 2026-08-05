@@ -1,0 +1,10 @@
+apiVersion: v2
+name: arc-controller
+description: Actions Runner Controller (ARC) controller manager + bundled CRDs
+type: application
+version: 0.1.0
+appVersion: "0.14.2"
+dependencies:
+  - name: gha-runner-scale-set-controller
+    version: 0.14.2
+    repository: ghcr.io/actions/actions-runner-controller-charts
