@@ -7,4 +7,4 @@ appVersion: "0.14.2"
 dependencies:
   - name: gha-runner-scale-set
     version: 0.14.2
-    repository: oci://ghcr.io/actions/actions-runner-controller-charts
+    repository: ghcr.io/actions/actions-runner-controller-charts
