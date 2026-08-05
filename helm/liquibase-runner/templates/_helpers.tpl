@@ -1,8 +1,8 @@
-{{- define "k8s-gh-runner.name" -}}
+{{- define "liquibase-runner.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "k8s-gh-runner.fullname" -}}
+{{- define "liquibase-runner.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,16 +15,16 @@
 {{- end }}
 {{- end }}
 
-{{- define "k8s-gh-runner.labels" -}}
-helm.sh/chart: {{ include "k8s-gh-runner.name" . }}-{{ .Chart.Version | replace "+" "_" }}
-{{ include "k8s-gh-runner.selectorLabels" . }}
+{{- define "liquibase-runner.labels" -}}
+helm.sh/chart: {{ include "liquibase-runner.name" . }}-{{ .Chart.Version | replace "+" "_" }}
+{{ include "liquibase-runner.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "k8s-gh-runner.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "k8s-gh-runner.name" . }}
+{{- define "liquibase-runner.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "liquibase-runner.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

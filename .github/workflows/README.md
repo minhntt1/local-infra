@@ -40,28 +40,23 @@ The `local-infra` workflows run on a self-hosted GitHub Actions runner hosted in
 
 - The runner must be online for `terraform-apply` (and any other workflow) to execute, since jobs are pinned to this self-hosted runner.
 
-## K8s Runner (ARC)
+## K8s Runner (Liquibase)
 
-Separate from the LXC runner above, the `liquibase-preview` and `liquibase-sync` workflows run on an **ephemeral self-hosted runner deployed inside the k3s cluster** via the **GitHub Actions Runner Controller (ARC)**. This gives the runner direct in-cluster DNS access to the MySQL services so Liquibase can reach them without exposing MySQL externally.
-
-ARC consists of a controller operator (`arc-controller` ArgoCD app) and a runner scale set (`k8s-gh-runner` app), both in the `github-runners` namespace. ARC auto-scales ephemeral runner pods on demand and handles registration (no `config.sh`/`run.sh`, no env-var-based registration).
+Separate from the LXC runner above, the `liquibase-preview` and `liquibase-sync` workflows run on an **ephemeral self-hosted runner deployed inside the k3s cluster** (deployed by the `liquibase-runner` ArgoCD app via `helm/liquibase-runner/`). This gives the runner direct in-cluster DNS access to the MySQL services so Liquibase can reach them without exposing MySQL externally.
 
 | Attribute | Value |
 |-----------|-------|
-| Scale set name | `k8s-gh-runner` |
-| Labels | `self-hosted,k8s` |
+| Image | `ghcr.io/actions/actions-runner:2.336.0` |
 | Namespace | `github-runners` |
-| Controller chart | `oci://.../gha-runner-scale-set-controller` (v0.14.2) |
-| Runner chart | `helm/k8s-gh-runner/` (depends on `gha-runner-scale-set` OCI chart v0.14.2) |
-| Lifecycle | Ephemeral — ARC creates a runner pod per job and deletes it after |
-
-Workflows target the scale set with `runs-on: [self-hosted, k8s]`.
+| Runner name | `k8s-liquibase-runner` |
+| Labels | `self-hosted,k8s,liquibase` |
+| Ephemeral | `true` (single job, then exits; ArgoCD restarts a fresh pod) |
 
 **Liquibase sync flow** (managed under `database/`):
 - `liquibase-preview.yml` — on PR touching `database/**`, runs `liquibase status --verbose` + `liquibase updateSQL` and posts the pending changesets / DDL as a PR comment.
 - `liquibase-sync.yml` — on push to `main` touching `database/**`, runs `liquibase update` against the dev and prod MySQL databases.
-- Both use `dorny/paths-filter@v3` to only preview/sync the specific databases that changed, and provision Java + Liquibase on the runner via `actions/setup-java@v4` + `liquibase/setup-liquibase@v3`.
-- DB credentials are sealed into SealedSecrets in the `github-runners` namespace (`liquibase-dev-db` / `liquibase-prod-db`) and exposed to every runner pod as `DEV_JDBC_PASSWORD` / `PROD_JDBC_PASSWORD`.
+- Both use `dorny/paths-filter@v3` to only preview/sync the specific databases that changed, and provision Java + Liquibase on the runner via `actions/setup-java@v4` + `liquibase/setup-liquibase@v3` (no kubectl / Job orchestration needed).
+- DB credentials are sealed into SealedSecrets in the `github-runners` namespace (`liquibase-dev-db` / `liquibase-prod-db`) and exposed to the runner as `DEV_JDBC_PASSWORD` / `PROD_JDBC_PASSWORD`.
 
 ## Runner Rules
 

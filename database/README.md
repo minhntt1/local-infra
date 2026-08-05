@@ -33,7 +33,7 @@ database/
 ## Automated Deployment (Liquibase)
 
 Changelogs under this tree are applied automatically to the live MySQL databases by the
-`k8s-gh-runner` ARC-based GitHub Actions runner (see `.github/workflows/README.md` for the runner setup):
+`liquibase-runner` GitHub Actions workflow (see `.github/workflows/README.md` for the runner setup):
 
 - **Preview** (`liquibase-preview.yml`): on PRs that touch `database/**`, runs
   `liquibase status --verbose` and `liquibase updateSQL` and posts the pending changesets and
