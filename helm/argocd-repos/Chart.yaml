@@ -1,0 +1,6 @@
+apiVersion: v2
+name: argocd-repos
+description: ArgoCD OCI registry credentials (SealedSecret) for ghcr.io Helm chart pulls
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
