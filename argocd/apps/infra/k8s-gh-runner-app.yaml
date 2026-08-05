@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: liquibase-runner
+  name: k8s-gh-runner
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/minhntt1/local-infra
     targetRevision: main
-    path: helm/liquibase-runner
+    path: helm/k8s-gh-runner
   destination:
     server: https://kubernetes.default.svc
     namespace: github-runners

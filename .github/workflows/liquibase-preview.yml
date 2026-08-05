@@ -13,7 +13,7 @@ env:
 
 jobs:
   preview:
-    runs-on: [self-hosted, k8s, liquibase]
+    runs-on: [self-hosted, k8s]
     steps:
       - uses: actions/checkout@v4
 
