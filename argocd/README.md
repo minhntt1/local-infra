@@ -46,7 +46,7 @@ flowchart LR
 | Child App | ArgoCD Path | Namespace | Helm Chart Source |
 |-----------|-------------|-----------|-------------------|
 | `infra` | `argocd/apps/infra/` | `kube-system` | `argocd/infra/traefik/` (HelmChartConfig), `sealed-secrets-app.yaml` (bitnami Helm chart) |
-| `arc-controller` | `argocd/apps/infra/` | `github-runners` | `oci://.../gha-runner-scale-set-controller` (OCI chart) |
+| `arc-controller` | `argocd/apps/infra/` | `github-runners` | `ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller` (OCI chart) |
 | `k8s-gh-runner` | `argocd/apps/infra/` | `github-runners` | `helm/k8s-gh-runner/` (local chart + `gha-runner-scale-set` OCI dependency) |
 | `dev` | `argocd/apps/dev/` | `dev` | `helm/mysql/dev/`, `helm/network-statistics/dev/` |
 | `monitoring` | `argocd/apps/monitoring/` | `monitoring` | `helm/fluentbit/`, `helm/loki/`, `helm/prometheus/`, `helm/grafana/` |

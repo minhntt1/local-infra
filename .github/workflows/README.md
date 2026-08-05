@@ -51,7 +51,7 @@ ARC consists of a controller operator (`arc-controller` ArgoCD app) and a runner
 | Scale set name | `k8s-gh-runner` |
 | Labels | `self-hosted,k8s` |
 | Namespace | `github-runners` |
-| Controller chart | `oci://.../gha-runner-scale-set-controller` (v0.14.2) |
+| Controller chart | `ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller` (v0.14.2) |
 | Runner chart | `helm/k8s-gh-runner/` (depends on `gha-runner-scale-set` OCI chart v0.14.2) |
 | Lifecycle | Ephemeral — ARC creates a runner pod per job and deletes it after |
 
