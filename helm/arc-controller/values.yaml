@@ -1,0 +1,5 @@
+gha-runner-scale-set-controller:
+  flags:
+    watchSingleNamespace: github-runners
+  runnerMaxConcurrentReconciles: 2
+  updateStrategy: "immediate"
