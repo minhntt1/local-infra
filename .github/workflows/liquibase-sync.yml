@@ -40,10 +40,21 @@ jobs:
           version: '4.32.0'
           edition: community
 
+      - name: Install MySQL JDBC driver
+        run: |
+          mkdir -p /tmp/liquibase-lib
+          CONNECTOR="mysql-connector-j-9.1.0.jar"
+          if [ ! -f "/tmp/liquibase-lib/$CONNECTOR" ]; then
+            curl -fsSL -o "/tmp/liquibase-lib/$CONNECTOR" \
+              "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.1.0/$CONNECTOR"
+          fi
+          echo "LIQUIBASE_CLASSPATH=/tmp/liquibase-lib/$CONNECTOR" >> "$GITHUB_ENV"
+
       - name: Sync dev - network_statistics
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-network-statistics == 'true'
         run: |
           liquibase \
+            --classpath="$LIQUIBASE_CLASSPATH" \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
             --username="root" \
             --password="$DEV_JDBC_PASSWORD" \
@@ -54,6 +65,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-quartz == 'true'
         run: |
           liquibase \
+            --classpath="$LIQUIBASE_CLASSPATH" \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
             --username="root" \
             --password="$DEV_JDBC_PASSWORD" \
@@ -64,6 +76,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-testdb == 'true'
         run: |
           liquibase \
+            --classpath="$LIQUIBASE_CLASSPATH" \
             --url="jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/testdb?connectionTimeZone=UTC" \
             --username="root" \
             --password="$DEV_JDBC_PASSWORD" \
@@ -74,6 +87,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-network-statistics == 'true'
         run: |
           liquibase \
+            --classpath="$LIQUIBASE_CLASSPATH" \
             --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" \
             --username="root" \
             --password="$PROD_JDBC_PASSWORD" \
@@ -84,6 +98,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.prod-quartz == 'true'
         run: |
           liquibase \
+            --classpath="$LIQUIBASE_CLASSPATH" \
             --url="jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/quartz?connectionTimeZone=UTC" \
             --username="root" \
             --password="$PROD_JDBC_PASSWORD" \
