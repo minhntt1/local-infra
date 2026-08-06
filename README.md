@@ -81,6 +81,7 @@ local-infra/
 ├── .github/          # GitHub Actions workflows and runner docs
 ├── ansible/          # Configuration management & service bootstrap
 ├── argocd/           # ArgoCD App of Apps definitions
+├── database/         # Liquibase changelogs + baseline SQL for MySQL (dev/prod)
 ├── docs/             # Infrastructure documentation
 ├── helm/             # Helm charts for lab services
 └── terraform/        # Proxmox VM provisioning
@@ -96,3 +97,4 @@ local-infra/
 - [Ansible: Configuration & Service Bootstrap](./ansible/README.md)
 - [Monitoring Stack](./helm/README.md)
 - [ArgoCD](./argocd/README.md)
+- [Database: Liquibase Changelogs & Schema](./database/README.md)
