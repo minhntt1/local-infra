@@ -58,9 +58,18 @@ ARC consists of a controller operator (`arc-controller` ArgoCD app) and a runner
 Workflows target the scale set with `runs-on: [self-hosted, k8s]`.
 
 **Liquibase sync flow** (managed under `database/`):
-- `liquibase-preview.yml` — on PR touching `database/**`, runs `liquibase status --verbose` + `liquibase updateSQL` and posts the pending changesets / DDL as a PR comment.
-- `liquibase-sync.yml` — on push to `main` touching `database/**`, runs `liquibase update` against the dev and prod MySQL databases.
+- `liquibase-preview.yml` — on PR touching `database/**`, records existing baselines via `changelogSync` (non-destructive), then runs `liquibase status --verbose` + `liquibase updateSQL` and posts the pending changesets / DDL as a PR comment.
+- `liquibase-sync.yml` — on push to `main` touching `database/**`, runs `changelogSync` then `liquibase update` against the dev and prod MySQL databases.
 - Both use `dorny/paths-filter@v3` to only preview/sync the specific databases that changed, and provision Java + Liquibase on the runner via `actions/setup-java@v4` + `liquibase/setup-liquibase@v3`.
+- Liquibase Community 4.32.0 does **not** bundle the MySQL JDBC driver. Both workflows install
+  `mysql-connector-j` into `/tmp/liquibase-lib` and pass it via `--classpath="$LIQUIBASE_CLASSPATH"`
+  on every `liquibase` invocation (otherwise runs fail with
+  `Cannot find database driver: com.mysql.jdbc.Driver`).
+- `changelogSync` is run before `update` so the baseline `v00000__baseline.sql` dumps (full
+  `mysqldump` exports) are **not** replayed against already-populated databases. It records the
+  `init-baseline` changeset in `DATABASECHANGELOG` without executing the SQL, so `update` becomes
+  a no-op ("up to date") and never drops/recreates existing tables. New migration scripts added
+  later will still apply incrementally.
 - DB credentials are sealed into SealedSecrets in the `github-runners` namespace (`liquibase-dev-db` / `liquibase-prod-db`) and exposed to every runner pod as `DEV_JDBC_PASSWORD` / `PROD_JDBC_PASSWORD`.
 
 ## Runner Rules
