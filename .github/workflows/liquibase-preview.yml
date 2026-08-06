@@ -58,6 +58,20 @@ jobs:
           rm -f /tmp/liquibase-preview.md
           touch /tmp/liquibase-preview.md
 
+      - name: Record existing baselines (changelogSync, no SQL executed)
+        run: |
+          sync_db() {
+            local url="$1" pass="$2" clog="$3"
+            liquibase --url="$url" --username="root" --password="$pass" \
+              --classpath="$LIQUIBASE_CLASSPATH" \
+              --changelog-file="$clog" changelogSync || true
+          }
+          sync_db "jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" "$DEV_JDBC_PASSWORD"  "database/dev/mysql/network_statistics/changelog/changelog1.xml"
+          sync_db "jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/quartz?connectionTimeZone=UTC"            "$DEV_JDBC_PASSWORD"  "database/dev/mysql/quartz/changelog/changelog1.xml"
+          sync_db "jdbc:mysql://mysql-dev.dev.svc.cluster.local:3306/testdb?connectionTimeZone=UTC"           "$DEV_JDBC_PASSWORD"  "database/dev/mysql/testdb/changelog/changelog1.xml"
+          sync_db "jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/network_statistics?connectionTimeZone=UTC" "$PROD_JDBC_PASSWORD" "database/prod/mysql/network_statistics/changelog/changelog1.xml"
+          sync_db "jdbc:mysql://mysql-prod.prod.svc.cluster.local:3306/quartz?connectionTimeZone=UTC"          "$PROD_JDBC_PASSWORD" "database/prod/mysql/quartz/changelog/changelog1.xml"
+
       - name: Preview dev - network_statistics
         if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.dev-network-statistics == 'true'
         run: |
