@@ -1,10 +1,17 @@
-<databaseChangeLog>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet
-        comments="init baseline">
+        id="init-baseline"
+        author="liquibase">
+
+        <comment>init baseline</comment>
 
         <sqlFile
-            path="../sql/v00000__baseline.sql" />
+            path="database/prod/mysql/network_statistics/sql/v00000__baseline.sql" />
 
     </changeSet>
 
