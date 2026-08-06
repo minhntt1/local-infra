@@ -11,7 +11,7 @@
         <comment>init baseline</comment>
 
         <sqlFile
-            path="../sql/v00000__baseline.sql" />
+            path="database/dev/mysql/testdb/sql/v00000__baseline.sql" />
 
     </changeSet>
 
