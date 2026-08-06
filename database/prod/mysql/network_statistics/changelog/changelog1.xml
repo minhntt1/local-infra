@@ -5,7 +5,10 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet
-        comment="init baseline">
+        id="init-baseline"
+        author="liquibase">
+
+        <comment>init baseline</comment>
 
         <sqlFile
             path="../sql/v00000__baseline.sql" />
